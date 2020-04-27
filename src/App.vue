@@ -1,7 +1,7 @@
 <template>
-    <div class="fill layout" id="app">
+    <div class="app bg-custom" id="app">
         <router-view/>
-        <footer class="pt-2 border-top fixed-bottom">
+        <footer class="pt-2 border-top fixed-bottom  bg-custom">
             <div class="row">
                 <div class="col-12 col-md">
                     <small class="d-block mb-2 text-muted text-center">Copyright © SurveY. All rights reserved.</small>
@@ -40,14 +40,6 @@
 <style>
     html,
     body {
-        height: 100%;
-    }
-
-    .layout {
-        background-color: #f5f5f5;
-    }
-
-    .fill {
         height: 100%;
     }
 </style>

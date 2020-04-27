@@ -50,6 +50,7 @@
                     } else{
                         this.$store.commit("LOGIN", reply.data);
                         this.$toastr.s("Welcome Back", "Welcome");
+                        await this.$router.push({name: 'dashboard'});
                     }
                 } catch(e) {
                     console.log(e);
@@ -63,4 +64,10 @@
 </script>
 
 <style scoped>
+    .form-signin {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: auto;
+    }
 </style>
