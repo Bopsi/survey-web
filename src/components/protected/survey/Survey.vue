@@ -56,10 +56,10 @@
                 <button class="btn btn-sm border btn-primary" title="Add Question" type="button" v-if="survey.status === 'UNLOCKED'">
                     <font-awesome-icon icon="plus"/>
                 </button>
-                <button @click="lock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED'">
+                <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED'">
                     <font-awesome-icon icon="lock"/>
                 </button>
-                <button @click="version" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
+                <button @click="promptVersion" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
                     <font-awesome-icon icon="code-branch"/>
                 </button>
             </div>
@@ -130,14 +130,19 @@
             </div>
         </div>
         <div class="clearfix mb-5"></div>
+        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock"/>
+        <prompt :body="promptBody" :show="promptShow" :title="promptTitle" type="LARGE_TEXT" @cancel="cancel" @confirm="version"/>
     </div>
 </template>
 
 <script>
     import EventBus from "../../../event-bus";
+    import Cofirm from "../../Cofirm";
+    import Prompt from "../../Prompt";
 
     export default {
         name: "Survey",
+        components: {Prompt, Cofirm},
         props: ["id"],
         data() {
             return {
@@ -152,13 +157,19 @@
                     created_by: 1,
                     questions: []
                 },
-                view: 'LIST'
+                view: 'LIST',
+                confirmShow: false,
+                confirmTitle: null,
+                confirmBody: null,
+                promptShow: false,
+                promptTitle: null,
+                promptBody: null
             }
         },
         watch: {
-          "id": function(nv, ov) {
-              this.getSurvey();
-          }
+            "id": function(nv, ov) {
+                this.getSurvey();
+            }
         },
         mounted() {
             this.getSurvey();
@@ -183,7 +194,26 @@
             setView(view) {
                 this.view = view;
             },
+            confirmLock() {
+                this.confirmShow  = true;
+                this.confirmTitle = "Lock Survey?";
+                this.confirmBody  = "You will no longer be able to modify survey. Are you sure?";
+            },
+            promptVersion() {
+                this.promptShow  = true;
+                this.promptTitle = "Create a new version of this survey?";
+                this.promptBody  = "Why are you creating a new version? If left blank, the system generated description will be saved";
+            },
+            cancel() {
+                this.confirmShow  = false;
+                this.confirmTitle = null;
+                this.confirmBody  = null;
+                this.promptShow  = false;
+                this.promptTitle = null;
+                this.promptBody  = null;
+            },
             async lock() {
+                this.cancel();
                 try {
                     EventBus.$emit('openLoader', 'Locking survey');
                     const reply = await this.$http.post(`surveys/${this.id}/lock`);
@@ -198,10 +228,11 @@
                     EventBus.$emit('closeLoader');
                 }
             },
-            async version() {
+            async version(description) {
+                this.cancel();
                 try {
                     EventBus.$emit('openLoader', 'Creating new version');
-                    let reply = await this.$http.post(`surveys/${this.id}/version`);
+                    let reply = await this.$http.post(`surveys/${this.id}/version`, { description: description});
                     this.$toastr.s(`Version ${reply.data.id} created`, "Success");
                     await this.$router.push({name: 'survey', params: {id: reply.data.id}});
                 } catch(e) {
