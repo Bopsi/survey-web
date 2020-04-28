@@ -27,7 +27,7 @@ const router = new VueRouter({
                     component: resolve => require(["./components/protected/survey/Surveys.vue"], resolve)
                 },
                 {
-                    path: 'surveys/:surveyid',
+                    path: 'surveys/:id',
                     name: "survey",
                     props: true,
                     component: resolve => require(["./components/protected/survey/Survey.vue"], resolve)

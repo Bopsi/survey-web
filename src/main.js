@@ -11,7 +11,21 @@ import {
     faPollH,
     faSignInAlt,
     faUserPlus,
-    faSignOutAlt
+    faSignOutAlt,
+    faEye,
+    faWrench,
+    faLockOpen,
+    faLock,
+    faDotCircle,
+    faCheckSquare,
+    faKeyboard,
+    faBan,
+    faArrowLeft,
+    faTable,
+    faClipboardList,
+    faPlus,
+    faTrash,
+    faCodeBranch
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome';
 import Clipboard from 'v-clipboard';
@@ -24,7 +38,8 @@ import 'bootstrap';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./assets/css/custom.css";
 
-library.add([faPollH, faSignInAlt, faUserPlus, faSignOutAlt]);
+library.add([faPollH, faSignInAlt, faUserPlus, faSignOutAlt, faEye, faWrench, faLock, faLockOpen, faDotCircle,
+    faCheckSquare, faKeyboard, faBan, faArrowLeft, faTable, faClipboardList, faPlus, faTrash, faCodeBranch]);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 Vue.config.productionTip = false;

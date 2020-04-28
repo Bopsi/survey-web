@@ -6,3 +6,16 @@
 .bg-custom {
     background-color: #f5f5f5;
 }
+
+body{
+    background-color: #f5f5f5;
+}
+
+.m-t-35 {
+    margin-top: 35px;
+}
+
+.q-label.required:after {
+    content:" *";
+    color:red;
+}
