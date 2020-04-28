@@ -1,10 +1,9 @@
 <template>
-    <div :class="{ loader: true, fadeout: !isLoading }">
+    <div :class="{ loader: isLoading, fadeout: !isLoading }">
         <div class="spinner-border spinner-border-lg text-light" role="status" style="width: 3rem; height: 3rem;">
-            <span class="sr-only" v-if="loadingText">{{loadingText}}...</span>
-            <span class="sr-only" v-else>Loading...</span>
         </div>
         <br><br>
+        <h3 class="text-light" v-if="loadingText">{{loadingText}}</h3>
         <h3 class="text-light">Please Wait ...</h3>
     </div>
 </template>

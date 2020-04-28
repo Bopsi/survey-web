@@ -26,12 +26,13 @@
             };
         },
         mounted() {
-            EventBus.$on("closeLoader", (text) => {
-                this.isLoading = false;
+            EventBus.$on("openLoader", (text) => {
+                this.isLoading = true;
                 this.loadingText = text;
             });
-            EventBus.$on("openLoader", () => {
-                this.isLoading = true;
+            EventBus.$on("closeLoader", () => {
+                this.isLoading = false;
+                this.loadingText = null;
             });
         }
     };

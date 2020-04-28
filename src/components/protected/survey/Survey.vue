@@ -56,7 +56,10 @@
                 <button class="btn btn-sm border btn-primary" title="Add Question" type="button" v-if="survey.status === 'UNLOCKED'">
                     <font-awesome-icon icon="plus"/>
                 </button>
-                <button class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
+                <button @click="lock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED'">
+                    <font-awesome-icon icon="lock"/>
+                </button>
+                <button @click="version" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
                     <font-awesome-icon icon="code-branch"/>
                 </button>
             </div>
@@ -152,6 +155,11 @@
                 view: 'LIST'
             }
         },
+        watch: {
+          "id": function(nv, ov) {
+              this.getSurvey();
+          }
+        },
         mounted() {
             this.getSurvey();
         },
@@ -174,6 +182,33 @@
             },
             setView(view) {
                 this.view = view;
+            },
+            async lock() {
+                try {
+                    EventBus.$emit('openLoader', 'Locking survey');
+                    const reply = await this.$http.post(`surveys/${this.id}/lock`);
+                    this.survey = {
+                        ...this.survey,
+                        ...reply.data
+                    }
+                    this.$toastr.s("Survey locked", "Success");
+                } catch(e) {
+                    this.$toastr.e(e.message, "Error")
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            async version() {
+                try {
+                    EventBus.$emit('openLoader', 'Creating new version');
+                    let reply = await this.$http.post(`surveys/${this.id}/version`);
+                    this.$toastr.s(`Version ${reply.data.id} created`, "Success");
+                    await this.$router.push({name: 'survey', params: {id: reply.data.id}});
+                } catch(e) {
+                    this.$toastr.e(e.message, "Error")
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
             }
         }
     }
