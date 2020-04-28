@@ -8,7 +8,7 @@
                 </router-link>
             </h4>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3 ">Survey details</h6>
+        <h6 class="card-subtitle font-weight-normal mb-3">Survey details</h6>
         <div class="row">
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Survey Id</dt>
@@ -41,6 +41,10 @@
                 <dt>Locked At</dt>
                 <dd>{{survey.locked_at | timestamp}}</dd>
             </dl>
+            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right" v-if="survey.is_deleted">
+                <dt>Deleted</dt>
+                <dd>{{survey.is_deleted?'Yes':'No'}}</dd>
+            </dl>
         </div>
 
         <div class="form-group">
@@ -53,10 +57,13 @@
                 </button>
             </div>
             <div aria-label="Basic example" class="btn-group float-right" role="group">
-                <button class="btn btn-sm border btn-primary" title="Add Question" type="button" v-if="survey.status === 'UNLOCKED'">
+                <button class="btn btn-sm border btn-danger" title="Delete Survey" type="button" @click="confirmDelete" v-if="!survey.is_deleted">
+                    <font-awesome-icon icon="trash"/>
+                </button>
+                <button class="btn btn-sm border btn-success" title="Add Question" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
                     <font-awesome-icon icon="plus"/>
                 </button>
-                <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED'">
+                <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
                     <font-awesome-icon icon="lock"/>
                 </button>
                 <button @click="promptVersion" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
@@ -65,6 +72,7 @@
             </div>
         </div>
         <hr class="m-t-35 mb-0">
+
         <div class="table table-responsive" v-if="view === 'LIST'">
             <table class="table">
                 <thead>
@@ -130,8 +138,10 @@
             </div>
         </div>
         <div class="clearfix mb-5"></div>
-        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock"/>
-        <prompt :body="promptBody" :show="promptShow" :title="promptTitle" type="LARGE_TEXT" @cancel="cancel" @confirm="version"/>
+
+        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock" v-if="modal === 'LOCK'"/>
+        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey" v-if="modal === 'DELETE'"/>
+        <prompt :body="promptBody" :show="promptShow" :title="promptTitle" @cancel="cancel" @confirm="version" type="LARGE_TEXT"/>
     </div>
 </template>
 
@@ -158,6 +168,7 @@
                     questions: []
                 },
                 view: 'LIST',
+                modal: 'LOCK',
                 confirmShow: false,
                 confirmTitle: null,
                 confirmBody: null,
@@ -195,6 +206,7 @@
                 this.view = view;
             },
             confirmLock() {
+                this.modal        = 'LOCK';
                 this.confirmShow  = true;
                 this.confirmTitle = "Lock Survey?";
                 this.confirmBody  = "You will no longer be able to modify survey. Are you sure?";
@@ -204,13 +216,19 @@
                 this.promptTitle = "Create a new version of this survey?";
                 this.promptBody  = "Why are you creating a new version? If left blank, the system generated description will be saved";
             },
+            confirmDelete() {
+                this.modal        = 'DELETE';
+                this.confirmShow  = true;
+                this.confirmTitle = "Delete Survey?";
+                this.confirmBody  = "You will no longer be able to modify or assess the survey. Are you sure?";
+            },
             cancel() {
                 this.confirmShow  = false;
                 this.confirmTitle = null;
                 this.confirmBody  = null;
-                this.promptShow  = false;
-                this.promptTitle = null;
-                this.promptBody  = null;
+                this.promptShow   = false;
+                this.promptTitle  = null;
+                this.promptBody   = null;
             },
             async lock() {
                 this.cancel();
@@ -232,11 +250,24 @@
                 this.cancel();
                 try {
                     EventBus.$emit('openLoader', 'Creating new version');
-                    let reply = await this.$http.post(`surveys/${this.id}/version`, { description: description});
+                    let reply = await this.$http.post(`surveys/${this.id}/version`, {description: description});
                     this.$toastr.s(`Version ${reply.data.id} created`, "Success");
                     await this.$router.push({name: 'survey', params: {id: reply.data.id}});
                 } catch(e) {
                     this.$toastr.e(e.message, "Error")
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            async deleteSurvey() {
+                try {
+                    EventBus.$emit('openLoader', 'Deleting survey');
+                    this.cancel();
+                    await this.$http.delete(`surveys/${this.id}`);
+                    this.$toastr.s("Survey deleted", "Success");
+                    await this.$router.push({name: 'surveys'});
+                } catch(e) {
+                    this.$toastr.e(e.message, "Error");
                 } finally {
                     EventBus.$emit('closeLoader');
                 }

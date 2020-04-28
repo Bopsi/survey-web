@@ -32,7 +32,7 @@
             });
             EventBus.$on("closeLoader", () => {
                 this.isLoading = false;
-                this.loadingText = null;
+               // this.loadingText = null;
             });
         }
     };

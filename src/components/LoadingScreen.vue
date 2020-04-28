@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ loader: isLoading, fadeout: !isLoading }">
+    <div :class="{ loader: true, fadeout: !isLoading }">
         <div class="spinner-border spinner-border-lg text-light" role="status" style="width: 3rem; height: 3rem;">
         </div>
         <br><br>
