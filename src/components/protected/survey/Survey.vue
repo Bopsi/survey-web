@@ -77,7 +77,7 @@
             <table class="table">
                 <thead>
                 <tr>
-                    <th class="border-top-0">Id</th>
+                    <th class="border-top-0">Order</th>
                     <th class="border-top-0">Description</th>
                     <th class="border-top-0">Note</th>
                     <th class="border-top-0 text-center">Type</th>
@@ -89,7 +89,7 @@
                 </thead>
                 <tbody>
                 <tr v-for="question in survey.questions">
-                    <td>{{question.id}}</td>
+                    <td>{{question.index}}</td>
                     <td>{{question.description}}</td>
                     <td>{{question.note}}</td>
                     <td class="text-center">

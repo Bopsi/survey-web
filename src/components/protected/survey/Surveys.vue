@@ -11,7 +11,7 @@
                         @click="includeDeleted= !includeDeleted" class="btn btn-sm border" type="button">
                     <font-awesome-icon icon="low-vision"/>
                 </button>
-                <button class="btn btn-sm border btn-success" title="Add Survey" type="button">
+                <button class="btn btn-sm border btn-success" data-target="#addSurveyModal" data-toggle="modal" title="Add Survey" type="button">
                     <font-awesome-icon icon="plus"/>
                 </button>
             </div>
@@ -27,7 +27,7 @@
                     <th class="border-top-0 text-center">Status</th>
                     <th class="border-top-0">Created At</th>
                     <th class="border-top-0">Locked At</th>
-                    <th v-if="includeDeleted" class="border-top-0">Deleted</th>
+                    <th class="border-top-0" v-if="includeDeleted">Deleted</th>
                     <th class="border-top-0 text-center">Action</th>
                 </tr>
                 </thead>
@@ -58,6 +58,35 @@
             </table>
         </div>
         <div class="clearfix mb-5"></div>
+        <!-- Add Survey Modal -->
+        <div aria-hidden="true" aria-labelledby="addSurveyModalLabel" class="modal fade" id="addSurveyModal" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header p-2">
+                        <h6 class="modal-title ml-2" id="addSurveyModalLabel">Create new survey</h6>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form @submit.prevent="addSurvey">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="q-label required">Name</label>
+                                <textarea class="form-control" placeholder="Enter survey name" required v-model="survey.name"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="q-label required">Description</label>
+                                <textarea class="form-control" placeholder="Enter survey description" required v-model="survey.description"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer p-1">
+                            <button class="btn btn-sm btn-secondary mt-0 mb-0" type="reset">Reset</button>
+                            <button class="btn btn-sm btn-primary mt-0 mb-0 mr-0" type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey"/>
     </div>
@@ -67,6 +96,7 @@
     import EventBus from "../../../event-bus";
     import {mapGetters} from "vuex";
     import Cofirm from "../../Cofirm";
+    import $ from "jquery";
 
     export default {
         name: "Surveys",
@@ -77,6 +107,10 @@
         data() {
             return {
                 surveys: [],
+                survey: {
+                    name: null,
+                    survey: null
+                },
                 includeDeleted: false,
                 survey_id: null,
                 confirmShow: false,
@@ -119,6 +153,20 @@
                 this.confirmShow  = false;
                 this.confirmTitle = null;
                 this.confirmBody  = null;
+            },
+            async addSurvey() {
+                $('#addSurveyModal').modal('toggle');
+                try {
+                    EventBus.$emit('openLoader', 'Creating survey');
+                    let reply = await this.$http.post("surveys", this.survey);
+                    this.$toastr.s("Survey created", "Success");
+                    await this.$router.push({name: 'survey', params: {id: reply.data.id}});
+                } catch(e) {
+                    this.$toastr.e(e.message, "Error");
+                } finally {
+                    this.survey = {name: null, description: null};
+                    EventBus.$emit('closeLoader');
+                }
             },
             async deleteSurvey() {
                 if(this.survey_id) {
