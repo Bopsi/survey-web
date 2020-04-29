@@ -24,6 +24,7 @@
                 <tr>
                     <th class="border-top-0">Name</th>
                     <th class="border-top-0">Description</th>
+                    <th class="border-top-0">Version</th>
                     <th class="border-top-0 text-center">Status</th>
                     <th class="border-top-0">Created At</th>
                     <th class="border-top-0">Locked At</th>
@@ -35,6 +36,7 @@
                 <tr v-for="survey in surveys">
                     <td>{{survey.name}}</td>
                     <td>{{survey.description}}</td>
+                    <td>{{survey.version}}</td>
                     <td class="text-center">
                         <font-awesome-icon class="text-secondary" icon="lock" v-if="survey.status === 'LOCKED'"/>
                         <font-awesome-icon class="text-primary" icon="lock-open" v-if="survey.status === 'UNLOCKED'"/>
