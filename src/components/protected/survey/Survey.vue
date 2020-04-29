@@ -57,10 +57,11 @@
                 </button>
             </div>
             <div aria-label="Basic example" class="btn-group float-right" role="group">
-                <button class="btn btn-sm border btn-danger" title="Delete Survey" type="button" @click="confirmDelete" v-if="!survey.is_deleted">
+                <button @click="confirmDelete" class="btn btn-sm border btn-danger" title="Delete Survey" type="button" v-if="!survey.is_deleted">
                     <font-awesome-icon icon="trash"/>
                 </button>
-                <button class="btn btn-sm border btn-success" title="Add Question" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
+                <button class="btn btn-sm border btn-success" data-target="#addQuestionModal" data-toggle="modal" title="Add Question"
+                        type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
                     <font-awesome-icon icon="plus"/>
                 </button>
                 <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
@@ -84,7 +85,7 @@
                     <th class="border-top-0">Mandatory?</th>
                     <th class="border-top-0">Attachments?</th>
                     <th class="border-top-0">Created At</th>
-                    <th class="border-top-0">Action</th>
+                    <th class="border-top-0 text-center">Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -101,7 +102,11 @@
                     <td>{{question.mandatory}}</td>
                     <td>{{question.attachments}}</td>
                     <td>{{question.created_at| timestamp}}</td>
-                    <td>Action</td>
+                    <td class="text-center">
+                        <a href="javascript:void(0)" title="Delete question">
+                            <font-awesome-icon class="text-danger" icon="trash"/>
+                        </a>
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -139,6 +144,100 @@
         </div>
         <div class="clearfix mb-5"></div>
 
+        <!-- Add Survey Modal -->
+        <div aria-hidden="true" aria-labelledby="addQuestionModalLabel" class="modal fade" id="addQuestionModal" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header p-2">
+                        <h6 class="modal-title ml-2" id="addQuestionModalLabel">Create new question</h6>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form @submit.prevent="addQuestion">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="q-label required">Description</label>
+                                <textarea class="form-control" name="description" placeholder="Enter question name" required v-model="question.description"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="q-label">Note</label>
+                                <textarea class="form-control" name="note" placeholder="Enter question note" v-model="question.note"></textarea>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-12 col-md-4">
+                                    <label class="q-label required">Mandatory?</label>
+                                    <div class="form-check">
+                                        <input :value="true" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                                        <label class="form-check-label">
+                                            Yes
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input :value="false" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                                        <label class="form-check-label">
+                                            No
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-4">
+
+                                    <label class="q-label required">Type</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="TEXT">
+                                        <label class="form-check-label">
+                                            Text
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="RADIO">
+                                        <label class="form-check-label">
+                                            Radio
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="CHECKBOX">
+                                        <label class="form-check-label">
+                                            Checkbox
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="NONE">
+                                        <label class="form-check-label">
+                                            None
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-4">
+                                    <label class="q-label required">Attachments?</label>
+                                    <div class="form-check">
+                                        <input :value="true" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                                        <label class="form-check-label">
+                                            Yes
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input :value="false" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                                        <label class="form-check-label">
+                                            No
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer p-1">
+                            <button class="btn btn-sm btn-secondary mt-0 mb-0" type="reset">Reset</button>
+                            <button class="btn btn-sm btn-primary mt-0 mb-0 mr-0" type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock" v-if="modal === 'LOCK'"/>
         <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey" v-if="modal === 'DELETE'"/>
         <prompt :body="promptBody" :show="promptShow" :title="promptTitle" @cancel="cancel" @confirm="version" type="LARGE_TEXT"/>
@@ -149,6 +248,7 @@
     import EventBus from "../../../event-bus";
     import Cofirm from "../../Cofirm";
     import Prompt from "../../Prompt";
+    import $ from "jquery";
 
     export default {
         name: "Survey",
@@ -166,6 +266,13 @@
                     locked_at: null,
                     created_by: 1,
                     questions: []
+                },
+                question: {
+                    description: null,
+                    note: null,
+                    mandatory: null,
+                    type: null,
+                    attachments: null
                 },
                 view: 'LIST',
                 modal: 'LOCK',
@@ -254,8 +361,22 @@
                     this.$toastr.s(`Version ${reply.data.id} created`, "Success");
                     await this.$router.push({name: 'survey', params: {id: reply.data.id}});
                 } catch(e) {
+                    this.$toastr.e(e.message, "Error");
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            async addQuestion() {
+                $('#addQuestionModal').modal('toggle');
+                try {
+                    EventBus.$emit('openLoader', 'Creating question');
+                    let reply = await this.$http.post(`surveys/${this.id}/questions`, this.question);
+                    this.$toastr.s("Question created", "Success");
+                    await this.getSurvey();
+                } catch(e) {
                     this.$toastr.e(e.message, "Error")
                 } finally {
+                    this.question = {description: null, note: null, mandatory: null, type: null, attachments: null};
                     EventBus.$emit('closeLoader');
                 }
             },
