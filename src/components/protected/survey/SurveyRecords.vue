@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="row p-0">
-            <h4 class="card-title font-weight-normal mb-2 col-6">Survey {{id}} Reports</h4>
+            <h4 class="card-title font-weight-normal mb-2 col-6">Survey {{id}} Records</h4>
             <h4 class="text-right col-6">
                 <router-link :to="{name:'surveys'}" title="Back">
                     <font-awesome-icon icon="arrow-left"/>
@@ -54,7 +54,7 @@
     import EventBus from "../../../event-bus";
 
     export default {
-        name: "SurveyReports",
+        name: "SurveyRecords",
         props: ["id"],
         computed: {
             ...mapGetters(["currentUser"])
@@ -72,7 +72,7 @@
                     created_by: 1,
                     questions: []
                 },
-                reports: []
+                records: []
             }
         },
         mounted() {
@@ -92,7 +92,7 @@
                     EventBus.$emit('closeLoader');
                 }
             },
-            async getReports() {
+            async getRecords() {
                 try {
                     EventBus.$emit('openLoader', 'Fetching survey');
                     let reply = await this.$http.get(`/surveys/${this.id}`);

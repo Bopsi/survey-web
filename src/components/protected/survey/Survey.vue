@@ -73,8 +73,8 @@
                     </button>
                 </template>
                 <template v-if="survey.status === 'LOCKED'">
-                    <router-link :to="{name: 'survey-reports', params : {id: survey.id}}" class="btn btn-sm border btn-success" title="Reports">
-                        <font-awesome-icon icon="pen-alt"/>
+                    <router-link :to="{name: 'survey-records', params : {id: survey.id}}" class="btn btn-sm border btn-success" title="Records">
+                        <font-awesome-icon icon="clipboard-check"/>
                     </router-link>
                 </template>
             </div>
@@ -118,9 +118,9 @@
                     <td>{{question.created_at| timestamp}}</td>
                     <td class="text-center" v-if="currentUser.role === 'ADMIN'">
                         <router-link :to="{name: 'survey-question', params: {surveyid: id, questionid: question.id}}" class="mr-2" title="Edit question" v-if="survey.status === 'UNLOCKED'">
-                            <font-awesome-icon icon="pen-alt"/>
+                            <font-awesome-icon icon="edit"/>
                         </router-link>
-                        <a href="javascript:void(0)" title="Delete question">
+                        <a @click="confirmDeleteQuestion(question.id)" href="javascript:void(0)" title="Delete question">
                             <font-awesome-icon class="text-danger" icon="trash"/>
                         </a>
                     </td>
@@ -257,6 +257,7 @@
 
         <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock" v-if="modal === 'LOCK'"/>
         <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey" v-if="modal === 'DELETE'"/>
+        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteQuestion" v-if="modal === 'DELETE_Q'"/>
         <prompt :body="promptBody" :show="promptShow" :title="promptTitle" @cancel="cancel" @confirm="version" type="LARGE_TEXT"/>
     </div>
 </template>
@@ -302,7 +303,8 @@
                 confirmBody: null,
                 promptShow: false,
                 promptTitle: null,
-                promptBody: null
+                promptBody: null,
+                questionid: null
             }
         },
         watch: {
@@ -367,8 +369,12 @@
                 this.confirmTitle = "Delete Survey?";
                 this.confirmBody  = "You will no longer be able to modify or assess the survey. Are you sure?";
             },
-            promptReport() {
-
+            confirmDeleteQuestion(questionid) {
+                this.modal        = 'DELETE_Q';
+                this.confirmShow  = true;
+                this.confirmTitle = "Delete question?";
+                this.confirmBody  = "This operation is permanent. Are you sure?";
+                this.questionid   = questionid;
             },
             cancel() {
                 this.confirmShow  = false;
@@ -377,9 +383,9 @@
                 this.promptShow   = false;
                 this.promptTitle  = null;
                 this.promptBody   = null;
+                this.questionid   = null;
             },
             async lock() {
-                this.cancel();
                 try {
                     EventBus.$emit('openLoader', 'Locking survey');
                     const reply = await this.$http.post(`surveys/${this.id}/lock`);
@@ -391,11 +397,11 @@
                 } catch(e) {
                     this.$toastr.e(e.message, "Error")
                 } finally {
+                    this.cancel();
                     EventBus.$emit('closeLoader');
                 }
             },
             async version(description) {
-                this.cancel();
                 try {
                     EventBus.$emit('openLoader', 'Creating new version');
                     let reply = await this.$http.post(`surveys/${this.id}/version`, {description: description});
@@ -404,14 +410,16 @@
                 } catch(e) {
                     this.$toastr.e(e.message, "Error");
                 } finally {
+                    this.cancel();
                     EventBus.$emit('closeLoader');
                 }
             },
-            async addQuestion() {
+            async addQuestion()
+            {
                 $('#addQuestionModal').modal('toggle');
                 try {
                     EventBus.$emit('openLoader', 'Creating question');
-                    let reply = await this.$http.post(`surveys/${this.id}/questions`, this.question);
+                    await this.$http.post(`surveys/${this.id}/questions`, this.question);
                     this.$toastr.s("Question created", "Success");
                     await this.getSurvey();
                 } catch(e) {
@@ -420,18 +428,31 @@
                     this.question = {description: null, note: null, mandatory: null, type: null, attachments: null};
                     EventBus.$emit('closeLoader');
                 }
-            },
+            }
+,
             async deleteSurvey() {
                 try {
                     EventBus.$emit('openLoader', 'Deleting survey');
-                    this.cancel();
                     await this.$http.delete(`surveys/${this.id}`);
                     this.$toastr.s("Survey deleted", "Success");
                     await this.$router.push({name: 'surveys'});
                 } catch(e) {
                     this.$toastr.e(e.message, "Error");
                 } finally {
+                    this.cancel();
                     EventBus.$emit('closeLoader');
+                }
+            },
+            async deleteQuestion() {
+                try {
+                    EventBus.$emit("openLoader", "Deleting question")
+                    await this.$http.delete(`surveys/${this.id}/questions/${this.questionid}`);
+                    await this.getQuestions();
+                } catch(e) {
+                    console.log(e);
+                } finally {
+                    this.cancel();
+                    EventBus.$emit("closeLoader");
                 }
             },
             async move(qid, direction) {

@@ -49,8 +49,8 @@
                             <router-link :to="{name: 'survey', params : {id: survey.id}}" title="View">
                                 <font-awesome-icon icon="eye"/>
                             </router-link>
-                            <router-link :to="{name: 'survey-reports', params : {id: survey.id}}" class="text-success ml-2" title="Reports">
-                                <font-awesome-icon icon="pen-alt"/>
+                            <router-link :to="{name: 'survey-records', params : {id: survey.id}}" class="text-success ml-2" title="Records">
+                                <font-awesome-icon icon="clipboard-check"/>
                             </router-link>
                         </template>
                         <template v-if="currentUser.role === 'ADMIN'">
@@ -156,9 +156,6 @@
                 this.confirmShow  = true;
                 this.confirmTitle = "Delete Survey?";
                 this.confirmBody  = "You will no longer be able to modify or assess the survey. Are you sure?";
-            },
-            promptReport(id) {
-                this.survey_id = id;
             },
             cancel() {
                 this.survey_id    = null;

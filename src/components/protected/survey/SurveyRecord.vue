@@ -1,10 +1,10 @@
 <template>
-    <h1>Survey report work</h1>
+    <h1>Survey Record work</h1>
 </template>
 
 <script>
     export default {
-        name: "SurveyReports"
+        name: "SurveyRecords"
     }
 </script>
 

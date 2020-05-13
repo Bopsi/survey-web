@@ -33,16 +33,16 @@ const router = new VueRouter({
                     component: resolve => require(["./components/protected/survey/Survey.vue"], resolve)
                 },
                 {
-                    path: 'surveys/:id/reports',
-                    name: "survey-reports",
+                    path: 'surveys/:id/records',
+                    name: "survey-records",
                     props: true,
-                    component: resolve => require(["./components/protected/survey/SurveyReports.vue"], resolve)
+                    component: resolve => require(["./components/protected/survey/SurveyRecords.vue"], resolve)
                 },
                 {
-                    path: 'surveys/:surveyid/reports/:reportid',
-                    name: "survey-report",
+                    path: 'surveys/:surveyid/records/:recordid',
+                    name: "survey-record",
                     props: true,
-                    component: resolve => require(["./components/protected/survey/SurveyReport.vue"], resolve)
+                    component: resolve => require(["./components/protected/survey/SurveyRecord.vue"], resolve)
                 },
                 {
                     path: 'surveys/:surveyid/question/:questionid',
@@ -51,16 +51,16 @@ const router = new VueRouter({
                     component: resolve => require(["./components/protected/survey/SurveyQuestion.vue"], resolve)
                 },
                 {
-                    path: 'reports',
-                    name: "reports",
+                    path: 'records',
+                    name: "records",
                     props: true,
-                    component: resolve => require(["./components/protected/report/Reports.vue"], resolve)
+                    component: resolve => require(["./components/protected/record/Records.vue"], resolve)
                 },
                 {
-                    path: 'reports/:id',
-                    name: "report",
+                    path: 'records/:id',
+                    name: "record",
                     props: true,
-                    component: resolve => require(["./components/protected/report/Report.vue"], resolve)
+                    component: resolve => require(["./components/protected/record/Record.vue"], resolve)
                 }
             ]
         },
