@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-if="currentUser.role === 'ADMIN' && survey.status === 'UNLOCKED' && !survey.is_deleted">
         <div class="row p-0">
             <h4 class="card-title font-weight-normal mb-2 col-6">Question</h4>
             <h4 class="text-right col-6">
@@ -8,49 +8,245 @@
                 </router-link>
             </h4>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3">Survey details</h6>
-        <form>
-            <div class="row">
-                <dl class="col-lg-6 col-md-6 col-sm-6 col-xs-12 border-right">
-                    <dt>Description</dt>
-                    <dd><textarea class="form-control" v-model="question.description"/></dd>
-                </dl>
-                <dl class="col-lg-6 col-md-6 col-sm-6 col-xs-12 border-right">
-                    <dt>Note</dt>
-                    <dd><textarea class="form-control" v-model="question.note"/></dd>
-                </dl>
+        <h6 class="card-subtitle font-weight-normal mb-3">Question {{questionid}} details</h6>
+        <form @submit.prevent="submit" class="row mb-0">
+            <div class="form-group col-md-6 col-sm-12 border-right">
+                <label class="q-label required">Description</label>
+                <textarea class="form-control" name="description" placeholder="Enter question name" required v-model="question.description"></textarea>
+            </div>
+
+            <div class="form-group col-md-6 col-sm-12 border-right">
+                <label class="q-label">Note</label>
+                <textarea class="form-control" name="note" placeholder="Enter question note" v-model="question.note"></textarea>
+            </div>
+
+            <div class="form-group col-md-3 col-sm-12 border-right">
+                <label class="q-label required">Mandatory?</label>
+                <div class="form-check">
+                    <input :value="true" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                    <label class="form-check-label">
+                        Yes
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input :value="false" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                    <label class="form-check-label">
+                        No
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group col-md-3 col-sm-12 border-right">
+                <label class="q-label required">Type</label>
+                <div class="form-check">
+                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="TEXT">
+                    <label class="form-check-label">
+                        Text
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="RADIO">
+                    <label class="form-check-label">
+                        Radio
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="CHECKBOX">
+                    <label class="form-check-label">
+                        Checkbox
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="NONE">
+                    <label class="form-check-label">
+                        None
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group col-md-3 col-sm-12 border-right">
+                <label class="q-label required">Attachments?</label>
+                <div class="form-check">
+                    <input :value="true" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                    <label class="form-check-label">
+                        Yes
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input :value="false" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                    <label class="form-check-label">
+                        No
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group col-md-3 col-sm-12 border-right">
+                <label class="q-label required">Index</label>
+                <input class="form-control" name="attachments" required type="number" v-model="question.index">
+            </div>
+
+            <div class="form-group col-12">
+                <button class="btn btn-sm border btn-primary float-right" title="Submit" type="submit">
+                    Submit
+                </button>
+                <button @click="reset" class="btn btn-sm border btn-secondary float-right" title="Reset" type="button">
+                    Reset
+                </button>
             </div>
         </form>
+        <hr class="mt-0 mb-3">
+        <template v-if="['RADIO','CHECKBOX'].includes(question.type)">
+            <div class="form-group">
+                <div aria-label="Basic example" class="float-left" role="group">
+                    <h6>Options</h6>
+                </div>
+                <div aria-label="Basic example" class="btn-group float-right" role="group">
+                    <button class="btn btn-sm border btn-success" title="Add Option" type="button" v-if="!survey.is_deleted" @click="showAddSection = true">
+                        <font-awesome-icon icon="plus"/>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table table-responsive mb-5">
+                <table class="table border-top mt-1">
+                    <thead>
+                    <tr>
+                        <th class="border-top-0">Order</th>
+                        <th class="border-top-0">Description</th>
+                        <th class="border-top-0">Value</th>
+                        <th class="border-top-0 text-center">Type</th>
+                        <th class="border-top-0 text-center" v-if="currentUser.role === 'ADMIN'">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-if="showAddSection">
+                        <td colspan="5">
+                            Add/link an option here
+                        </td>
+                    </tr>
+                    <tr v-for="(option,index) in question.options">
+                        <td class="wd-75">
+                            {{option.index}}
+                            <a @click="move(option.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="option.index !== 1">
+                                <font-awesome-icon icon="arrow-up"/>
+                            </a>
+                            <a @click="move(option.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="option.index!== question.options.length">
+                                <font-awesome-icon icon="arrow-down"/>
+                            </a>
+                        </td>
+                        <td>{{option.description}}</td>
+                        <td>{{option.value}}</td>
+                        <td class="text-center">
+                            <font-awesome-icon class="text-primary" icon="server" title="System Option" v-if="option.type === 'SYSTEM'"/>
+                            <font-awesome-icon class="text-primary" icon="chalkboard-teacher" title="Custom Option" v-if="option.type === 'CUSTOM'"/>
+                        </td>
+                        <td class="text-center">
+                            <a class="mr-2" href="javascript:void(0)" title="Edit Question" v-if="option.type === 'CUSTOM'">
+                                <font-awesome-icon icon="edit"/>
+                            </a>
+                            <a @click="confirmDeleteQuestion(option.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
+                                <font-awesome-icon class="text-danger" icon="trash"/>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+    </div>
+    <div v-else>
+        Read Only
     </div>
 </template>
 
 <script>
     import EventBus from "../../../event-bus";
+    import {mapGetters} from "vuex";
+
+    let _question = {};
 
     export default {
         name: "SurveyQuestion",
         props: ["surveyid", "questionid"],
+        computed: {
+            ...mapGetters(['currentUser'])
+        },
         data() {
             return {
-                question: {}
+                survey: {},
+                question: {
+                    options: []
+                },
+                showAddSection: false
             }
         },
         mounted() {
-            this.getQuestion();
+            this.init();
         },
         methods: {
+            async init() {
+                await this.getSurvey();
+                await this.getQuestion();
+            },
+            async getSurvey() {
+                try {
+                    EventBus.$emit('openLoader', 'Fetching survey');
+                    const reply = await this.$http.get(`surveys/${this.surveyid}`);
+                    if(reply.data) {
+                        this.survey = reply.data;
+                    } else {
+                        this.$toastr.e("Survey not found", "Error");
+                        await this.$router.push({name: 'surveys'});
+                    }
+                } catch(e) {
+                    this.$toastr.e("Internal server error", "Error");
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
             async getQuestion() {
                 try {
                     EventBus.$emit("openLoaded", "Fetching question")
                     let reply = await this.$http(`/surveys/${this.surveyid}/questions/${this.questionid}`);
                     if(reply.data) {
+                        _question     = {...reply.data};
                         this.question = reply.data;
                     }
                 } catch(e) {
-
+                    this.$toastr.e(e.response.data.message, "Error");
+                    await this.$router.push({name: 'survey', params: {id: this.surveyid}});
                 } finally {
                     EventBus.$emit("closeLoader");
                 }
+            },
+            async submit() {
+                try {
+                    EventBus.$emit("openLoader", "Modifying question");
+                    if(_question.index !== this.question.index) {
+                        await this.$http.post(`surveys/${this.surveyid}/questions/${this.questionid}/reorder`, {index: this.question.index});
+                    }
+                    await this.$http.put(`surveys/${this.surveyid}/questions/${this.questionid}`, {
+                        description: this.question.description,
+                        note: this.question.note,
+                        mandatory: this.question.mandatory,
+                        type: this.question.type,
+                        attachments: this.question.attachments
+                    });
+                    await this.getQuestion();
+                } catch(e) {
+                    this.$toastr.e(e.response.data.message, "Error");
+                } finally {
+                    EventBus.$emit("closeLoader");
+                }
+            },
+            reset() {
+                this.question = {..._question};
+            },
+            move() {
+
+            },
+            confirmDeleteQuestion() {
+
             }
         }
     }

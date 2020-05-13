@@ -7,7 +7,7 @@
     background-color: #f5f5f5;
 }
 
-body{
+body {
     background-color: #f5f5f5;
 }
 
@@ -16,6 +16,10 @@ body{
 }
 
 .q-label.required:after {
-    content:" *";
-    color:red;
+    content: " *";
+    color: red;
+}
+
+.wd-75 {
+    min-width: 75px;
 }

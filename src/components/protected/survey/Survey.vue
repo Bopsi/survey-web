@@ -89,6 +89,7 @@
                     <th class="border-top-0">Description</th>
                     <th class="border-top-0">Note</th>
                     <th class="border-top-0 text-center">Type</th>
+                    <th class="border-top-0">Options</th>
                     <th class="border-top-0">Mandatory?</th>
                     <th class="border-top-0">Attachments?</th>
                     <th class="border-top-0">Created At</th>
@@ -97,11 +98,12 @@
                 </thead>
                 <tbody>
                 <tr v-for="(question,index) in questions">
-                    <td>{{question.index}}
-                        <a @click="move(question.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="survey.status === 'UNLOCKED' && index !== 0">
+                    <td class="wd-75">
+                        {{question.index}}
+                        <a @click="move(question.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="survey.status === 'UNLOCKED' && question.index !== 1">
                             <font-awesome-icon icon="arrow-up"/>
                         </a>
-                        <a @click="move(question.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="survey.status === 'UNLOCKED' && index!== questions.length-1">
+                        <a @click="move(question.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="survey.status === 'UNLOCKED' && question.index!== questions.length">
                             <font-awesome-icon icon="arrow-down"/>
                         </a>
                     </td>
@@ -113,14 +115,21 @@
                         <font-awesome-icon class="text-primary" icon="keyboard" v-if="question.type === 'TEXT'"/>
                         <font-awesome-icon class="text-primary" icon="ban" v-if="question.type === 'NONE'"/>
                     </td>
+                    <td>
+                        <template v-if="['TEXT','NONE'].includes(question.type)">N/A</template>
+                        <template v-else>{{question.options.length}}</template>
+                    </td>
                     <td>{{question.mandatory}}</td>
                     <td>{{question.attachments}}</td>
                     <td>{{question.created_at| timestamp}}</td>
                     <td class="text-center" v-if="currentUser.role === 'ADMIN'">
-                        <router-link :to="{name: 'survey-question', params: {surveyid: id, questionid: question.id}}" class="mr-2" title="Edit question" v-if="survey.status === 'UNLOCKED'">
+                        <router-link :to="{name: 'survey-question', params: {surveyid: id, questionid: question.id}}" class="mr-2" title="Edit Question" v-if="survey.status === 'UNLOCKED'">
                             <font-awesome-icon icon="edit"/>
                         </router-link>
-                        <a @click="confirmDeleteQuestion(question.id)" href="javascript:void(0)" title="Delete question">
+                        <router-link :to="{name: 'survey-question', params: {surveyid: id, questionid: question.id}}" class="mr-2" title="View Question" v-if="survey.status === 'LOCKED'">
+                            <font-awesome-icon icon="eye"/>
+                        </router-link>
+                        <a @click="confirmDeleteQuestion(question.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
                             <font-awesome-icon class="text-danger" icon="trash"/>
                         </a>
                     </td>
@@ -419,9 +428,9 @@
                 $('#addQuestionModal').modal('toggle');
                 try {
                     EventBus.$emit('openLoader', 'Creating question');
-                    await this.$http.post(`surveys/${this.id}/questions`, this.question);
+                    let reply = await this.$http.post(`surveys/${this.id}/questions`, this.question);
                     this.$toastr.s("Question created", "Success");
-                    await this.getSurvey();
+                    this.$router.push({ name: 'survey-question', params: { surveyid: this.id, questionid: reply.data.id}})
                 } catch(e) {
                     this.$toastr.e(e.message, "Error")
                 } finally {
