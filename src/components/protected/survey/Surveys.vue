@@ -6,7 +6,7 @@
         <div class="row"></div>
 
         <div class="form-group">
-            <div aria-label="Basic example" class="btn-group float-right " role="group">
+            <div aria-label="Basic example" class="btn-group float-right " role="group" v-if="currentUser.role === 'ADMIN'">
                 <button :class="includeDeleted?'btn-primary':'btn-light'" :title="includeDeleted?'Hide Hidden Surveys':'Show Hidden Surveys'"
                         @click="includeDeleted= !includeDeleted" class="btn btn-sm border" type="button">
                     <font-awesome-icon icon="low-vision"/>
@@ -45,15 +45,22 @@
                     <td>{{survey.locked_at | timestamp}}</td>
                     <td v-if="includeDeleted">{{survey.is_deleted?'Yes':'No'}}</td>
                     <td class="text-center">
-                        <router-link :to="{name: 'survey', params : {id: survey.id}}" title="View" v-if="survey.status === 'LOCKED' || survey.is_deleted">
-                            <font-awesome-icon icon="eye"/>
-                        </router-link>
-                        <router-link :to="{name: 'survey', params : {id: survey.id}}" title="Configure" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
-                            <font-awesome-icon icon="wrench"/>
-                        </router-link>
-                        <a class="text-danger pl-2" href="javascript:void(0)" title="Delete">
-                            <font-awesome-icon @click="confirmDelete(survey.id)" icon="trash"/>
-                        </a>
+                        <template v-if="survey.status === 'LOCKED'">
+                            <router-link :to="{name: 'survey', params : {id: survey.id}}" title="View">
+                                <font-awesome-icon icon="eye"/>
+                            </router-link>
+                            <router-link :to="{name: 'survey-reports', params : {id: survey.id}}" class="text-success ml-2" title="Reports">
+                                <font-awesome-icon icon="pen-alt"/>
+                            </router-link>
+                        </template>
+                        <template v-if="currentUser.role === 'ADMIN'">
+                            <router-link :to="{name: 'survey', params : {id: survey.id}}" title="Configure" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
+                                <font-awesome-icon icon="wrench"/>
+                            </router-link>
+                            <a class="text-danger pl-2" href="javascript:void(0)" title="Delete">
+                                <font-awesome-icon @click="confirmDelete(survey.id)" icon="trash"/>
+                            </a>
+                        </template>
                     </td>
                 </tr>
                 </tbody>
@@ -149,6 +156,9 @@
                 this.confirmShow  = true;
                 this.confirmTitle = "Delete Survey?";
                 this.confirmBody  = "You will no longer be able to modify or assess the survey. Are you sure?";
+            },
+            promptReport(id) {
+                this.survey_id = id;
             },
             cancel() {
                 this.survey_id    = null;

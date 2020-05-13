@@ -8,25 +8,9 @@ import VeeValidate from 'vee-validate';
 import VueToastr from 'vue-toastr';
 import {library} from '@fortawesome/fontawesome-svg-core';
 import {
-    faPollH,
-    faSignInAlt,
-    faUserPlus,
-    faSignOutAlt,
-    faEye,
-    faWrench,
-    faLockOpen,
-    faLock,
-    faDotCircle,
-    faCheckSquare,
-    faKeyboard,
-    faBan,
-    faArrowLeft,
-    faTable,
-    faClipboardList,
-    faPlus,
-    faTrash,
-    faCodeBranch,
-    faLowVision
+    faPollH, faSignInAlt, faUserPlus, faSignOutAlt, faEye, faWrench, faLockOpen, faLock, faDotCircle,
+    faCheckSquare, faKeyboard, faBan, faArrowLeft, faTable, faClipboardList, faPlus, faTrash, faCodeBranch,
+    faLowVision, faPenAlt, faArrowUp, faArrowDown
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome';
 import Clipboard from 'v-clipboard';
@@ -41,7 +25,7 @@ import "./assets/css/custom.css";
 
 library.add([faPollH, faSignInAlt, faUserPlus, faSignOutAlt, faEye, faWrench, faLock, faLockOpen, faDotCircle,
     faCheckSquare, faKeyboard, faBan, faArrowLeft, faTable, faClipboardList, faPlus, faTrash, faCodeBranch,
-    faLowVision]);
+    faLowVision, faPenAlt, faArrowUp, faArrowDown]);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 Vue.config.productionTip = false;

@@ -30,10 +30,10 @@
                             <router-link :to="{name: 'surveys'}" class="nav-link">Surveys</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link :to="{name: 'reports'}" class="nav-link">Reports</router-link>
+                            <router-link :to="{name: 'reports' }" class="nav-link">Reports</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link :to="{name: 'reports'}" class="nav-link">Configure</router-link>
+                            <router-link :to="{name: 'configure'}" class="nav-link">Configure</router-link>
                         </li>
                     </ul>
                     <hr class="d-sm-none">

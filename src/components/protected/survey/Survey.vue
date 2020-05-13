@@ -57,19 +57,26 @@
                 </button>
             </div>
             <div aria-label="Basic example" class="btn-group float-right" role="group">
-                <button @click="confirmDelete" class="btn btn-sm border btn-danger" title="Delete Survey" type="button" v-if="!survey.is_deleted">
-                    <font-awesome-icon icon="trash"/>
-                </button>
-                <button class="btn btn-sm border btn-success" data-target="#addQuestionModal" data-toggle="modal" title="Add Question"
-                        type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
-                    <font-awesome-icon icon="plus"/>
-                </button>
-                <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
-                    <font-awesome-icon icon="lock"/>
-                </button>
-                <button @click="promptVersion" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
-                    <font-awesome-icon icon="code-branch"/>
-                </button>
+                <template v-if="currentUser.role === 'ADMIN'">
+                    <button @click="confirmDelete" class="btn btn-sm border btn-danger" title="Delete Survey" type="button" v-if="!survey.is_deleted">
+                        <font-awesome-icon icon="trash"/>
+                    </button>
+                    <button class="btn btn-sm border btn-success" data-target="#addQuestionModal" data-toggle="modal" title="Add Question"
+                            type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
+                        <font-awesome-icon icon="plus"/>
+                    </button>
+                    <button @click="confirmLock" class="btn btn-sm border btn-primary" title="Lock Survey" type="button" v-if="survey.status === 'UNLOCKED' && !survey.is_deleted">
+                        <font-awesome-icon icon="lock"/>
+                    </button>
+                    <button @click="promptVersion" class="btn btn-sm border btn-primary" title="Create New Version" type="button" v-if="survey.status === 'LOCKED'">
+                        <font-awesome-icon icon="code-branch"/>
+                    </button>
+                </template>
+                <template v-if="survey.status === 'LOCKED'">
+                    <router-link :to="{name: 'survey-reports', params : {id: survey.id}}" class="btn btn-sm border btn-success" title="Reports">
+                        <font-awesome-icon icon="pen-alt"/>
+                    </router-link>
+                </template>
             </div>
         </div>
         <hr class="m-t-35 mb-0">
@@ -85,12 +92,19 @@
                     <th class="border-top-0">Mandatory?</th>
                     <th class="border-top-0">Attachments?</th>
                     <th class="border-top-0">Created At</th>
-                    <th class="border-top-0 text-center">Action</th>
+                    <th class="border-top-0 text-center" v-if="currentUser.role === 'ADMIN'">Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="question in survey.questions">
-                    <td>{{question.index}}</td>
+                <tr v-for="(question,index) in questions">
+                    <td>{{question.index}}
+                        <a @click="move(question.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="survey.status === 'UNLOCKED' && index !== 0">
+                            <font-awesome-icon icon="arrow-up"/>
+                        </a>
+                        <a @click="move(question.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="survey.status === 'UNLOCKED' && index!== questions.length-1">
+                            <font-awesome-icon icon="arrow-down"/>
+                        </a>
+                    </td>
                     <td>{{question.description}}</td>
                     <td>{{question.note}}</td>
                     <td class="text-center">
@@ -102,7 +116,10 @@
                     <td>{{question.mandatory}}</td>
                     <td>{{question.attachments}}</td>
                     <td>{{question.created_at| timestamp}}</td>
-                    <td class="text-center">
+                    <td class="text-center" v-if="currentUser.role === 'ADMIN'">
+                        <router-link :to="{name: 'survey-question', params: {surveyid: id, questionid: question.id}}" class="mr-2" title="Edit question" v-if="survey.status === 'UNLOCKED'">
+                            <font-awesome-icon icon="pen-alt"/>
+                        </router-link>
                         <a href="javascript:void(0)" title="Delete question">
                             <font-awesome-icon class="text-danger" icon="trash"/>
                         </a>
@@ -112,7 +129,7 @@
             </table>
         </div>
         <div class="mt-2" v-else>
-            <div class="form-group col-md-6 col-sm-12 mb-4" v-for="(question,i) in survey.questions">
+            <div class="form-group col-md-6 col-sm-12 mb-4" v-for="(question,i) in questions">
                 <div class="mb-2">
                     <label :class="question.mandatory?'required':''" class="font-weight-bold mb-0 q-label"> {{i+1}}. {{question.description}}</label>
                     <small class="form-text text-muted" v-if="question.note">{{question.note}}</small>
@@ -249,11 +266,15 @@
     import Cofirm from "../../Cofirm";
     import Prompt from "../../Prompt";
     import $ from "jquery";
+    import {mapGetters} from "vuex";
 
     export default {
         name: "Survey",
         components: {Prompt, Cofirm},
         props: ["id"],
+        computed: {
+            ...mapGetters(["currentUser"])
+        },
         data() {
             return {
                 survey: {
@@ -264,9 +285,9 @@
                     status: null,
                     created_at: null,
                     locked_at: null,
-                    created_by: 1,
-                    questions: []
+                    created_by: 1
                 },
+                questions: [],
                 question: {
                     description: null,
                     note: null,
@@ -290,9 +311,13 @@
             }
         },
         mounted() {
-            this.getSurvey();
+            this.init();
         },
         methods: {
+            async init() {
+                await this.getSurvey();
+                await this.getQuestions();
+            },
             async getSurvey() {
                 try {
                     EventBus.$emit('openLoader', 'Fetching survey');
@@ -302,6 +327,19 @@
                     } else {
                         this.$toastr.e("Survey not found", "Error");
                         await this.$router.push({name: 'surveys'});
+                    }
+                } catch(e) {
+                    this.$toastr.e("Internal server error", "Error");
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            async getQuestions() {
+                try {
+                    EventBus.$emit('openLoader', 'Fetching questions');
+                    const reply = await this.$http.get(`surveys/${this.id}/questions`);
+                    if(reply.data) {
+                        this.questions = reply.data;
                     }
                 } catch(e) {
                     this.$toastr.e("Internal server error", "Error");
@@ -328,6 +366,9 @@
                 this.confirmShow  = true;
                 this.confirmTitle = "Delete Survey?";
                 this.confirmBody  = "You will no longer be able to modify or assess the survey. Are you sure?";
+            },
+            promptReport() {
+
             },
             cancel() {
                 this.confirmShow  = false;
@@ -391,6 +432,17 @@
                     this.$toastr.e(e.message, "Error");
                 } finally {
                     EventBus.$emit('closeLoader');
+                }
+            },
+            async move(qid, direction) {
+                try {
+                    EventBus.$emit("openLoader", "Reordering question");
+                    await this.$http.post(`surveys/${this.id}/questions/${qid}/reorder`, {direction: direction});
+                    await this.getQuestions();
+                } catch(e) {
+                    console.log(e);
+                } finally {
+                    EventBus.$emit("closeLoader");
                 }
             }
         }

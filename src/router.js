@@ -31,6 +31,36 @@ const router = new VueRouter({
                     name: "survey",
                     props: true,
                     component: resolve => require(["./components/protected/survey/Survey.vue"], resolve)
+                },
+                {
+                    path: 'surveys/:id/reports',
+                    name: "survey-reports",
+                    props: true,
+                    component: resolve => require(["./components/protected/survey/SurveyReports.vue"], resolve)
+                },
+                {
+                    path: 'surveys/:surveyid/reports/:reportid',
+                    name: "survey-report",
+                    props: true,
+                    component: resolve => require(["./components/protected/survey/SurveyReport.vue"], resolve)
+                },
+                {
+                    path: 'surveys/:surveyid/question/:questionid',
+                    name: "survey-question",
+                    props: true,
+                    component: resolve => require(["./components/protected/survey/SurveyQuestion.vue"], resolve)
+                },
+                {
+                    path: 'reports',
+                    name: "reports",
+                    props: true,
+                    component: resolve => require(["./components/protected/report/Reports.vue"], resolve)
+                },
+                {
+                    path: 'reports/:id',
+                    name: "report",
+                    props: true,
+                    component: resolve => require(["./components/protected/report/Report.vue"], resolve)
                 }
             ]
         },
