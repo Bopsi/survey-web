@@ -14,6 +14,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome';
 import Clipboard from 'v-clipboard';
+import vSelect from "vue-select";
 
 import store from './store';
 import App from './App.vue'
@@ -21,6 +22,7 @@ import router from './router';
 
 import 'bootstrap';
 import "bootstrap/dist/css/bootstrap.min.css";
+import "vue-select/dist/vue-select.css";
 import "./assets/css/custom.css";
 
 library.add([faPollH, faSignInAlt, faUserPlus, faSignOutAlt, faEye, faWrench, faLock, faLockOpen, faDotCircle,
@@ -49,6 +51,8 @@ Vue.use(VueToastr, {
 });
 
 Vue.use(Clipboard);
+
+Vue.component("v-select", vSelect);
 
 Vue.filter('fromNow', function(dateString) {
     if(!dateString) return '';

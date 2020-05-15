@@ -89,7 +89,7 @@
                 <button class="btn btn-sm border btn-primary float-right" title="Submit" type="submit">
                     Submit
                 </button>
-                <button @click="reset" class="btn btn-sm border btn-secondary float-right" title="Reset" type="button">
+                <button @click="reset" class="btn btn-sm border btn-secondary float-right mr-2" title="Reset" type="button">
                     Reset
                 </button>
             </div>
@@ -101,8 +101,11 @@
                     <h6>Options</h6>
                 </div>
                 <div aria-label="Basic example" class="btn-group float-right" role="group">
-                    <button class="btn btn-sm border btn-success" title="Add Option" type="button" v-if="!survey.is_deleted" @click="showAddSection = true">
-                        <font-awesome-icon icon="plus"/>
+                    <button class="btn btn-sm border btn-success" data-target="#systemO" data-toggle="modal" title="Add System Option" type="button" v-if="!survey.is_deleted">
+                        <font-awesome-icon icon="server"/>
+                    </button>
+                    <button class="btn btn-sm border btn-success" data-target="#customO" data-toggle="modal" title="Add Custom Option" type="button" v-if="!survey.is_deleted">
+                        <font-awesome-icon icon="chalkboard-teacher"/>
                     </button>
                 </div>
             </div>
@@ -119,11 +122,6 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-if="showAddSection">
-                        <td colspan="5">
-                            Add/link an option here
-                        </td>
-                    </tr>
                     <tr v-for="(option,index) in question.options">
                         <td class="wd-75">
                             {{option.index}}
@@ -153,6 +151,42 @@
                 </table>
             </div>
         </template>
+        <div aria-hidden="true" aria-labelledby="systemOLabel" class="modal fade" id="systemO" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header p-2">
+                        <h6 class="modal-title ml-2" id="systemOLabel">Select a system question</h6>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-lg-7">
+                            <v-select :filterable="false" placeholder="Seacrh system options" :options="systemOptions" @search="onSearch" label="id" v-model="optionid">
+                                <template slot="no-options">
+                                    type to search system options
+                                </template>
+                                <template slot="option" slot-scope="option">
+                                    <div class="d-center">
+                                        Description : {{ option.description }}<br>
+                                        Value: {{ option.value }}
+                                    </div>
+                                </template>
+                                <template slot="selected-option" slot-scope="option">
+                                    <div class="selected d-center">
+                                        {{ option.description }}
+                                    </div>
+                                </template>
+                            </v-select>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-1">
+                        <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
+                        <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div v-else>
         Read Only
@@ -177,7 +211,14 @@
                 question: {
                     options: []
                 },
-                showAddSection: false
+                systemOptions: [],
+                showAddSection: false,
+                optionType: 'SYSTEM',
+                optionid: null,
+                option: {
+                    value: null,
+                    description: null
+                }
             }
         },
         mounted() {
@@ -247,6 +288,33 @@
             },
             confirmDeleteQuestion() {
 
+            },
+            async onSearch(search, loading) {
+                loading(true);
+                let reply          = await this.$http.get(`/options/search`, {params: {string: search}});
+                this.systemOptions = reply.data;
+                loading(false);
+            },
+            async saveOption() {
+                try {
+                    let body = {};
+                    if(this.optionid) {
+                        body.optionid = this.optionid.id;
+                    } else {
+                        body = {...this.option};
+                    }
+                    EventBus.$emit("openLoader", "Adding option");
+                    await this.$http.post(`/surveys/${this.surveyid}/questions/${this.questionid}/options`, body);
+                    await this.getQuestion();
+                } catch(e) {
+                    this.$toastr.e(e.response.data.message, "Error");
+                } finally {
+                    this.cancel();
+                    EventBus.$emit("closeLoader");
+                }
+            },
+            cancel() {
+                this.optionid = null;
             }
         }
     }
