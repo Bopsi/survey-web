@@ -8,7 +8,7 @@
                 </router-link>
             </h4>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3">Survey details</h6>
+        <h6 class="card-subtitle font-weight-normal mb-3">Records</h6>
         <div class="row">
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Survey Id</dt>
@@ -46,6 +46,49 @@
                 <dd>{{survey.is_deleted?'Yes':'No'}}</dd>
             </dl>
         </div>
+
+        <div class="form-group">
+            <div aria-label="Basic example" class="btn-group float-right" role="group">
+                <template v-if="survey.status === 'LOCKED'">
+                    <a class="btn btn-sm border btn-success" href="javascript:void(0)" title="Add Record">
+                        <font-awesome-icon icon="plus"/>
+                    </a>
+                </template>
+            </div>
+        </div>
+        <hr class="m-t-35 mb-0">
+
+        <div class="table table-responsive">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th class="border-top-0">Name</th>
+                    <th class="border-top-0">Description</th>
+                    <th class="border-top-0">Surveyor Name</th>
+                    <th class="border-top-0">Surveyor Email</th>
+                    <th class="border-top-0">Crated At</th>
+                    <th class="border-top-0 text-center">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(record,index) in records">
+                    <td>{{record.subject_name}}</td>
+                    <td>{{record.subject_description}}</td>
+                    <td>{{record.first_name+' '+record.last_name}}</td>
+                    <td>{{record.email}}</td>
+                    <td>{{record.created_at | date}}</td>
+                    <td class="text-center">
+                        <router-link :to="{name: 'survey-record' , params : { surveyid: id, recordid: record.id}}" class="mr-2" title="View Record">
+                            <font-awesome-icon icon="eye"/>
+                        </router-link>
+                        <a class="text-danger" href="javascript:void(0)" title="Delete Record">
+                            <font-awesome-icon icon="trash"/>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </template>
 
@@ -76,9 +119,13 @@
             }
         },
         mounted() {
-            this.getSurvey();
+            this.init();
         },
         methods: {
+            async init() {
+                await this.getSurvey();
+                await this.getRecords();
+            },
             async getSurvey() {
                 try {
                     EventBus.$emit('openLoader', 'Fetching survey');
@@ -95,9 +142,9 @@
             async getRecords() {
                 try {
                     EventBus.$emit('openLoader', 'Fetching survey');
-                    let reply = await this.$http.get(`/surveys/${this.id}`);
+                    let reply = await this.$http.get(`/surveys/${this.id}/records`);
                     if(reply) {
-                        this.survey = reply.data
+                        this.records = reply.data
                     }
                 } catch(e) {
 
