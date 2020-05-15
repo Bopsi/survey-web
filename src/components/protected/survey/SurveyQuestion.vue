@@ -142,7 +142,7 @@
                             <a class="mr-2" href="javascript:void(0)" title="Edit Question" v-if="option.type === 'CUSTOM'">
                                 <font-awesome-icon icon="edit"/>
                             </a>
-                            <a @click="confirmDeleteQuestion(option.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
+                            <a @click="confirmDeleteOption(option.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
                                 <font-awesome-icon class="text-danger" icon="trash"/>
                             </a>
                         </td>
@@ -161,24 +161,22 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div class="col-lg-7">
-                            <v-select :filterable="false" placeholder="Seacrh system options" :options="systemOptions" @search="onSearch" label="id" v-model="optionid">
-                                <template slot="no-options">
-                                    type to search system options
-                                </template>
-                                <template slot="option" slot-scope="option">
-                                    <div class="d-center">
-                                        Description : {{ option.description }}<br>
-                                        Value: {{ option.value }}
-                                    </div>
-                                </template>
-                                <template slot="selected-option" slot-scope="option">
-                                    <div class="selected d-center">
-                                        {{ option.description }}
-                                    </div>
-                                </template>
-                            </v-select>
-                        </div>
+                        <v-select :filterable="false" :options="systemOptions" @search="onSystemSearch" label="id" placeholder="Search system options" v-model="optionid">
+                            <template slot="no-options">
+                                type to search system options
+                            </template>
+                            <template slot="option" slot-scope="option">
+                                <div class="d-center">
+                                    Description : {{ option.description }}<br>
+                                    Value: {{ option.value }}
+                                </div>
+                            </template>
+                            <template slot="selected-option" slot-scope="option">
+                                <div class="selected d-center">
+                                    {{ option.description }}
+                                </div>
+                            </template>
+                        </v-select>
                     </div>
                     <div class="modal-footer p-1">
                         <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
@@ -187,6 +185,46 @@
                 </div>
             </div>
         </div>
+        <div aria-hidden="true" aria-labelledby="customOLabel" class="modal fade" id="customO" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header p-2">
+                        <h6 class="modal-title ml-2" id="customOLabel">Select a system question</h6>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <v-select :filterable="false" :options="customOptions" @search="onCustomSearch" class="mb-2" label="id" placeholder="Search custom options" v-model="optionid">
+                            <template slot="no-options">
+                                type to search system options
+                            </template>
+                            <template slot="option" slot-scope="option">
+                                <div class="d-center">
+                                    Description : {{ option.description }}<br>
+                                    Value: {{ option.value }}
+                                </div>
+                            </template>
+                            <template slot="selected-option" slot-scope="option">
+                                <div class="selected d-center">
+                                    {{ option.description }}
+                                </div>
+                            </template>
+                        </v-select>
+                        <div class="separator font-weight-light">Or create a custom option</div>
+                        <label class="q-label required">Value</label>
+                        <textarea class="form-control" placeholder="Enter option value" v-model="option.value"></textarea>
+                        <label class="q-label required mt-2">Description</label>
+                        <textarea class="form-control" placeholder="Enter option description" v-model="option.description"></textarea>
+                    </div>
+                    <div class="modal-footer p-1">
+                        <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
+                        <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <cofirm :show="confirmShow" @cancel="cancel" @confirm="deleteOption" body="This operation is permanent. Are you sure?" title="Delete option"/>
     </div>
     <div v-else>
         Read Only
@@ -196,14 +234,36 @@
 <script>
     import EventBus from "../../../event-bus";
     import {mapGetters} from "vuex";
+    import Cofirm from "../../Cofirm";
 
     let _question = {};
 
     export default {
         name: "SurveyQuestion",
         props: ["surveyid", "questionid"],
+        components: {Cofirm},
         computed: {
             ...mapGetters(['currentUser'])
+        },
+        watch: {
+            "optionid": function(nv, ov) {
+                if(nv) {
+                    this.option = {
+                        value: null,
+                        description: null
+                    }
+                }
+            },
+            "option.value": function(nv, ov) {
+                if(nv) {
+                    this.optionid = null
+                }
+            },
+            "option.description": function(nv, ov) {
+                if(nv) {
+                    this.optionid = null
+                }
+            },
         },
         data() {
             return {
@@ -212,13 +272,15 @@
                     options: []
                 },
                 systemOptions: [],
+                customOptions: [],
                 showAddSection: false,
                 optionType: 'SYSTEM',
                 optionid: null,
                 option: {
                     value: null,
                     description: null
-                }
+                },
+                confirmShow: false
             }
         },
         mounted() {
@@ -283,16 +345,31 @@
             reset() {
                 this.question = {..._question};
             },
-            move() {
-
+            async move(oid, direction) {
+                try {
+                    EventBus.$emit("openLoader", "Reordering option");
+                    await this.$http.post(`surveys/${this.surveyid}/questions/${this.questionid}/options/${oid}/reorder`, {direction: direction});
+                    await this.getQuestion();
+                } catch(e) {
+                    console.log(e);
+                } finally {
+                    EventBus.$emit("closeLoader");
+                }
             },
-            confirmDeleteQuestion() {
-
+            confirmDeleteOption(optionid) {
+                this.confirmShow = true;
+                this.optionid    = optionid;
             },
-            async onSearch(search, loading) {
+            async onSystemSearch(search, loading) {
                 loading(true);
-                let reply          = await this.$http.get(`/options/search`, {params: {string: search}});
+                let reply          = await this.$http.get(`/options/system`, {params: {string: search}});
                 this.systemOptions = reply.data;
+                loading(false);
+            },
+            async onCustomSearch(search, loading) {
+                loading(true);
+                let reply          = await this.$http.get(`/surveys/${this.surveyid}/options`, {params: {string: search}});
+                this.customOptions = reply.data;
                 loading(false);
             },
             async saveOption() {
@@ -307,14 +384,37 @@
                     await this.$http.post(`/surveys/${this.surveyid}/questions/${this.questionid}/options`, body);
                     await this.getQuestion();
                 } catch(e) {
-                    this.$toastr.e(e.response.data.message, "Error");
+                    if(e.response.data.routine === '_bt_check_unique') {
+                        this.$toastr.e("Option already added", "Error");
+                    } else {
+                        this.$toastr.e("Internal Server Error", "Error");
+                    }
                 } finally {
                     this.cancel();
                     EventBus.$emit("closeLoader");
                 }
             },
             cancel() {
-                this.optionid = null;
+                this.optionid      = null;
+                this.systemOptions = [];
+                this.customOptions = [];
+                this.option        = {
+                    description: null,
+                    value: null
+                },
+                this.confirmShow = false;
+            },
+            async deleteOption() {
+                try {
+                    EventBus.$emit("openLoader", "Deleting option");
+                    await this.$http.delete(`/surveys/${this.surveyid}/questions/${this.questionid}/options/${this.optionid}`);
+                    await this.getQuestion();
+                } catch(e) {
+                    this.$toastr.e("Internal Server Error","Error");
+                } finally {
+                    this.cancel();
+                    EventBus.$emit("closeLoader");
+                }
             }
         }
     }
