@@ -97,19 +97,19 @@
             </div>
         </div>
 
-        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey"/>
+        <confirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey"/>
     </div>
 </template>
 
 <script>
     import EventBus from "../../../event-bus";
     import {mapGetters} from "vuex";
-    import Cofirm from "../../Cofirm";
+    import Confirm from "../../Confirm";
     import $ from "jquery";
 
     export default {
         name: "Surveys",
-        components: {Cofirm},
+        components: {Confirm},
         computed: {
             ...mapGetters(["currentUser"])
         },

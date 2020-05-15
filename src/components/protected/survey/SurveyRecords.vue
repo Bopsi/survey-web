@@ -66,7 +66,7 @@
                     <th class="border-top-0">Description</th>
                     <th class="border-top-0">Surveyor Name</th>
                     <th class="border-top-0">Surveyor Email</th>
-                    <th class="border-top-0">Crated At</th>
+                    <th class="border-top-0">Created At</th>
                     <th class="border-top-0 text-center">Action</th>
                 </tr>
                 </thead>
@@ -81,7 +81,7 @@
                         <router-link :to="{name: 'survey-record' , params : { surveyid: id, recordid: record.id}}" class="mr-2" title="View Record">
                             <font-awesome-icon icon="eye"/>
                         </router-link>
-                        <a class="text-danger" href="javascript:void(0)" title="Delete Record">
+                        <a @click="confirmDelete(record.id)" class="text-danger" href="javascript:void(0)" title="Delete Record">
                             <font-awesome-icon icon="trash"/>
                         </a>
                     </td>
@@ -89,12 +89,15 @@
                 </tbody>
             </table>
         </div>
+        <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteRecord" body="You will no longer be able access the record. Are you sure?" title="Delete record?"/>
+
     </div>
 </template>
 
 <script>
     import {mapGetters} from "vuex";
     import EventBus from "../../../event-bus";
+    import Confirm from "../../Confirm";
 
     export default {
         name: "SurveyRecords",
@@ -102,6 +105,7 @@
         computed: {
             ...mapGetters(["currentUser"])
         },
+        components: {Confirm},
         data() {
             return {
                 survey: {
@@ -115,7 +119,9 @@
                     created_by: 1,
                     questions: []
                 },
-                records: []
+                records: [],
+                confirmShow: false,
+                recordid: null
             }
         },
         mounted() {
@@ -141,7 +147,7 @@
             },
             async getRecords() {
                 try {
-                    EventBus.$emit('openLoader', 'Fetching survey');
+                    EventBus.$emit('openLoader', 'Fetching records');
                     let reply = await this.$http.get(`/surveys/${this.id}/records`);
                     if(reply) {
                         this.records = reply.data
@@ -149,6 +155,26 @@
                 } catch(e) {
 
                 } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            confirmDelete(rid) {
+                this.recordid    = rid;
+                this.confirmShow = true;
+            },
+            cancel() {
+                this.confirmShow = false;
+                this.recordid    = null;
+            },
+            async deleteRecord() {
+                try {
+                    EventBus.$emit('openLoader', 'Deleting record');
+                    await this.$http.delete(`/surveys/${this.id}/records/${this.recordid}`);
+                    await this.getRecords();
+                } catch(e) {
+
+                } finally {
+                    this.cancel();
                     EventBus.$emit('closeLoader');
                 }
             }

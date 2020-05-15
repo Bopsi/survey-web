@@ -224,7 +224,7 @@
                 </div>
             </div>
         </div>
-        <cofirm :show="confirmShow" @cancel="cancel" @confirm="deleteOption" body="This operation is permanent. Are you sure?" title="Delete option"/>
+        <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteOption" body="This operation is permanent. Are you sure?" title="Delete option"/>
     </div>
     <div v-else>
         Read Only
@@ -234,14 +234,14 @@
 <script>
     import EventBus from "../../../event-bus";
     import {mapGetters} from "vuex";
-    import Cofirm from "../../Cofirm";
+    import Confirm from "../../Confirm";
 
     let _question = {};
 
     export default {
         name: "SurveyQuestion",
         props: ["surveyid", "questionid"],
-        components: {Cofirm},
+        components: {Confirm},
         computed: {
             ...mapGetters(['currentUser'])
         },

@@ -264,23 +264,23 @@
             </div>
         </div>
 
-        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock" v-if="modal === 'LOCK'"/>
-        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey" v-if="modal === 'DELETE'"/>
-        <cofirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteQuestion" v-if="modal === 'DELETE_Q'"/>
+        <confirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="lock" v-if="modal === 'LOCK'"/>
+        <confirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteSurvey" v-if="modal === 'DELETE'"/>
+        <confirm :body="confirmBody" :show="confirmShow" :title="confirmTitle" @cancel="cancel" @confirm="deleteQuestion" v-if="modal === 'DELETE_Q'"/>
         <prompt :body="promptBody" :show="promptShow" :title="promptTitle" @cancel="cancel" @confirm="version" type="LARGE_TEXT"/>
     </div>
 </template>
 
 <script>
     import EventBus from "../../../event-bus";
-    import Cofirm from "../../Cofirm";
+    import Confirm from "../../Confirm";
     import Prompt from "../../Prompt";
     import $ from "jquery";
     import {mapGetters} from "vuex";
 
     export default {
         name: "Survey",
-        components: {Prompt, Cofirm},
+        components: {Prompt, Confirm},
         props: ["id"],
         computed: {
             ...mapGetters(["currentUser"])

@@ -24,7 +24,7 @@
     import $ from 'jquery';
 
     export default {
-        name: "Cofirm",
+        name: "Confirm",
         props: ["show", "title", "body"],
         watch: {
             "show": function(nv, ov) {
