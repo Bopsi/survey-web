@@ -1,14 +1,23 @@
 <template>
     <div>
         <div class="row p-0">
-            <h4 class="card-title font-weight-normal mb-2 col-6">Survey</h4>
+            <h4 class="card-title font-weight-normal mb-2 col-6">Survey {{id}}</h4>
             <h4 class="text-right col-6">
                 <router-link :to="{name:'surveys'}" title="Back">
                     <font-awesome-icon icon="arrow-left"/>
                 </router-link>
             </h4>
+            <ol class="breadcrumb bg-transparent pt-0">
+                <li class="breadcrumb-item">
+                    <router-link :to="{name: 'surveys'}">Surveys</router-link>
+                </li>
+                <li aria-current="page" class="breadcrumb-item active">
+                    Survey {{id}}
+                </li>
+            </ol>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3">Survey details</h6>
+
+        <h5 class="card-subtitle font-weight-normal mb-3">Survey details</h5>
         <div class="row">
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Survey Id</dt>
@@ -46,17 +55,13 @@
                 <dd>{{survey.is_deleted?'Yes':'No'}}</dd>
             </dl>
         </div>
+        <hr class="mt-0">
 
-        <div class="form-group">
-            <div aria-label="Basic example" class="btn-group float-left" role="group">
-                <button :class="{'btn-light' : view === 'FORM', 'btn-primary': view === 'LIST'}" @click="setView('LIST')" class="btn btn-sm border" title="List View" type="button">
-                    <font-awesome-icon icon="table"/>
-                </button>
-                <button :class="{'btn-light' : view === 'LIST', 'btn-primary': view === 'FORM'}" @click="setView('FORM')" class="btn btn-sm border" title="Form View" type="button">
-                    <font-awesome-icon icon="clipboard-list"/>
-                </button>
+        <div class="form-group mb-1">
+            <div class="float-left align-bottom">
+                <h5 class="card-subtitle font-weight-normal mt-auto">Questions</h5>
             </div>
-            <div aria-label="Basic example" class="btn-group float-right" role="group">
+            <div class="btn-group float-right" role="group">
                 <template v-if="currentUser.role === 'ADMIN'">
                     <button @click="confirmDelete" class="btn btn-sm border btn-danger" title="Delete Survey" type="button" v-if="!survey.is_deleted">
                         <font-awesome-icon icon="trash"/>
@@ -78,8 +83,17 @@
                     </router-link>
                 </template>
             </div>
+            <div class="btn-group float-right mr-2" role="group">
+                <button :class="{'btn-light' : view === 'FORM', 'btn-primary': view === 'LIST'}" @click="setView('LIST')" class="btn btn-sm border" title="List View" type="button">
+                    <font-awesome-icon icon="table"/>
+                </button>
+                <button :class="{'btn-light' : view === 'LIST', 'btn-primary': view === 'FORM'}" @click="setView('FORM')" class="btn btn-sm border" title="Form View" type="button">
+                    <font-awesome-icon icon="clipboard-list"/>
+                </button>
+            </div>
+            <div class="clearfix"></div>
         </div>
-        <hr class="m-t-35 mb-0">
+        <hr class="mt-0 mb-0">
 
         <div class="table table-responsive" v-if="view === 'LIST'">
             <table class="table">

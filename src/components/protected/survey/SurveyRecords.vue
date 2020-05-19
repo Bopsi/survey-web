@@ -1,14 +1,26 @@
 <template>
     <div>
         <div class="row p-0">
-            <h4 class="card-title font-weight-normal mb-2 col-6">Survey {{id}} Records</h4>
+            <h4 class="card-title font-weight-normal mb-0 col-6">Survey {{id}} Records</h4>
             <h4 class="text-right col-6">
                 <router-link :to="{name:'surveys'}" title="Back">
                     <font-awesome-icon icon="arrow-left"/>
                 </router-link>
             </h4>
+            <ol class="breadcrumb bg-transparent pt-0">
+                <li class="breadcrumb-item">
+                    <router-link :to="{name: 'surveys'}">Surveys</router-link>
+                </li>
+                <li class="breadcrumb-item">
+                    <router-link :to="{name: 'survey', params: {id: id}}">Survey {{id}}</router-link>
+                </li>
+                <li aria-current="page" class="breadcrumb-item active">
+                    Records
+                </li>
+            </ol>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3">Records</h6>
+
+        <h5 class="card-subtitle font-weight-normal mb-3">Survey Details</h5>
         <div class="row">
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Survey Id</dt>
@@ -46,17 +58,22 @@
                 <dd>{{survey.is_deleted?'Yes':'No'}}</dd>
             </dl>
         </div>
+        <hr class="mt-0">
 
-        <div class="form-group">
-            <div aria-label="Basic example" class="btn-group float-right" role="group">
+        <div class="form-group mb-1">
+            <div class="float-left align-bottom">
+                <h5 class="card-subtitle font-weight-normal mt-auto">Records</h5>
+            </div>
+            <div class="btn-group float-right" role="group">
                 <template v-if="survey.status === 'LOCKED'">
                     <a class="btn btn-sm border btn-success" data-target="#addRecordModal" data-toggle="modal" href="javascript:void(0)" title="Add Record">
                         <font-awesome-icon icon="plus"/>
                     </a>
                 </template>
             </div>
+            <div class="clearfix"></div>
         </div>
-        <hr class="m-t-35 mb-0">
+        <hr class="mt-0 mb-0">
 
         <div class="table table-responsive">
             <table class="table">

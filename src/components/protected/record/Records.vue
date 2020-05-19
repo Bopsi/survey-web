@@ -6,7 +6,7 @@
         <div class="row"></div>
 
         <div class="form-group">
-            <div aria-label="Basic example" class="btn-group float-right " role="group" v-if="currentUser.role === 'ADMIN'">
+            <div class="btn-group float-right " role="group" v-if="currentUser.role === 'ADMIN'">
                 <button class="btn btn-sm border btn-success" data-target="#addSurveyModal" data-toggle="modal" title="Add Survey" type="button">
                     <font-awesome-icon icon="plus"/>
                 </button>

@@ -1,12 +1,19 @@
 <template>
     <div>
-        <h4 class="card-title font-weight-normal mb-2">Surveys </h4>
-        <h6 class="card-subtitle font-weight-normal mb-3">List of surveys</h6>
-
-        <div class="row"></div>
+        <div class="row p-0">
+            <h4 class="card-title font-weight-normal mb-2 col-12">Surveys</h4>
+            <ol class="breadcrumb bg-transparent pt-0">
+                <li aria-current="page" class="breadcrumb-item active">
+                    Surveys
+                </li>
+            </ol>
+        </div>
 
         <div class="form-group">
-            <div aria-label="Basic example" class="btn-group float-right " role="group" v-if="currentUser.role === 'ADMIN'">
+            <div class="float-left align-bottom">
+                <h5 class="card-subtitle font-weight-normal mt-auto">Available Surveys</h5>
+            </div>
+            <div class="btn-group float-right " role="group" v-if="currentUser.role === 'ADMIN'">
                 <button :class="includeDeleted?'btn-primary':'btn-light'" :title="includeDeleted?'Hide Hidden Surveys':'Show Hidden Surveys'"
                         @click="includeDeleted= !includeDeleted" class="btn btn-sm border" type="button">
                     <font-awesome-icon icon="low-vision"/>

@@ -97,10 +97,10 @@
         <hr class="mt-0 mb-3">
         <template v-if="['RADIO','CHECKBOX'].includes(question.type)">
             <div class="form-group">
-                <div aria-label="Basic example" class="float-left" role="group">
+                <div class="float-left" role="group">
                     <h6>Options</h6>
                 </div>
-                <div aria-label="Basic example" class="btn-group float-right" role="group">
+                <div class="btn-group float-right" role="group">
                     <button class="btn btn-sm border btn-success" data-target="#systemO" data-toggle="modal" title="Add System Option" type="button" v-if="!survey.is_deleted">
                         <font-awesome-icon icon="server"/>
                     </button>
