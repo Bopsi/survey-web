@@ -50,7 +50,7 @@
         <div class="form-group">
             <div aria-label="Basic example" class="btn-group float-right" role="group">
                 <template v-if="survey.status === 'LOCKED'">
-                    <a class="btn btn-sm border btn-success" href="javascript:void(0)" title="Add Record">
+                    <a class="btn btn-sm border btn-success" data-target="#addRecordModal" data-toggle="modal" href="javascript:void(0)" title="Add Record">
                         <font-awesome-icon icon="plus"/>
                     </a>
                 </template>
@@ -89,8 +89,37 @@
                 </tbody>
             </table>
         </div>
-        <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteRecord" body="You will no longer be able access the record. Are you sure?" title="Delete record?"/>
+        <!-- Add record modal -->
+        <div aria-hidden="true" aria-labelledby="addRecordModalLabel" class="modal fade" id="addRecordModal" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header p-2">
+                        <h6 class="modal-title ml-2" id="addRecordModalLabel">Create new record</h6>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form @submit.prevent="addRecord">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="q-label required">Subject Name</label>
+                                <textarea class="form-control" placeholder="Enter subject name" required v-model="record.subject_name"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="q-label required">Subject Description</label>
+                                <textarea class="form-control" placeholder="Enter subject description" required v-model="record.subject_description"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer p-1">
+                            <button class="btn btn-sm btn-secondary mt-0 mb-0" type="reset">Reset</button>
+                            <button class="btn btn-sm btn-primary mt-0 mb-0 mr-0" type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
+        <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteRecord" body="You will no longer be able access the record. Are you sure?" title="Delete record?"/>
     </div>
 </template>
 
@@ -98,6 +127,7 @@
     import {mapGetters} from "vuex";
     import EventBus from "../../../event-bus";
     import Confirm from "../../Confirm";
+    import $ from "jquery";
 
     export default {
         name: "SurveyRecords",
@@ -120,6 +150,10 @@
                     questions: []
                 },
                 records: [],
+                record: {
+                    subject_name: null,
+                    subject_description: null
+                },
                 confirmShow: false,
                 recordid: null
             }
@@ -166,13 +200,28 @@
                 this.confirmShow = false;
                 this.recordid    = null;
             },
+            async addRecord() {
+                $('#addRecordModal').modal('toggle');
+                try {
+                    EventBus.$emit('openLoader', 'Creating record');
+                    let reply = await this.$http.post(`surveys/${this.id}/records`, this.record);
+                    this.$toastr.s("Record created", "Success");
+                    await this.getRecords();
+                    //  await this.$router.push({name: 'survey', params: {id: reply.data.id}});
+                } catch(e) {
+                    this.$toastr.e(e.message, "Error");
+                } finally {
+                    this.record = {subject_name: null, subject_description: null};
+                    EventBus.$emit('closeLoader');
+                }
+            },
             async deleteRecord() {
                 try {
                     EventBus.$emit('openLoader', 'Deleting record');
                     await this.$http.delete(`/surveys/${this.id}/records/${this.recordid}`);
                     await this.getRecords();
                 } catch(e) {
-
+                    this.$toastr.e(e.message, "Error");
                 } finally {
                     this.cancel();
                     EventBus.$emit('closeLoader');
