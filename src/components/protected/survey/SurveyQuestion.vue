@@ -1,233 +1,281 @@
 <template>
-    <div v-if="currentUser.role === 'ADMIN' && survey.status === 'UNLOCKED' && !survey.is_deleted">
+    <div>
         <div class="row p-0">
-            <h4 class="card-title font-weight-normal mb-2 col-6">Question</h4>
+            <h4 class="card-title font-weight-normal mb-2 col-6">Question {{questionid}}</h4>
             <h4 class="text-right col-6">
                 <router-link :to="{name:'survey', params: { id: surveyid}}" title="Back">
                     <font-awesome-icon icon="arrow-left"/>
                 </router-link>
             </h4>
+            <ol class="breadcrumb bg-transparent pt-0">
+                <li class="breadcrumb-item">
+                    <router-link :to="{name: 'surveys'}">Surveys</router-link>
+                </li>
+                <li class="breadcrumb-item">
+                    <router-link :to="{name: 'survey', params: {id: surveyid}}">Survey {{surveyid}}</router-link>
+                </li>
+                <li aria-current="page" class="breadcrumb-item active">
+                    Question {{questionid}}
+                </li>
+            </ol>
         </div>
-        <h6 class="card-subtitle font-weight-normal mb-3">Question {{questionid}} details</h6>
-        <form @submit.prevent="submit" class="row mb-0">
-            <div class="form-group col-md-6 col-sm-12 border-right">
-                <label class="q-label required">Description</label>
-                <textarea class="form-control" name="description" placeholder="Enter question name" required v-model="question.description"></textarea>
-            </div>
 
-            <div class="form-group col-md-6 col-sm-12 border-right">
-                <label class="q-label">Note</label>
-                <textarea class="form-control" name="note" placeholder="Enter question note" v-model="question.note"></textarea>
-            </div>
+        <h5 class="card-subtitle font-weight-normal mb-3">Question {{questionid}} details</h5>
 
-            <div class="form-group col-md-3 col-sm-12 border-right">
-                <label class="q-label required">Mandatory?</label>
-                <div class="form-check">
-                    <input :value="true" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
-                    <label class="form-check-label">
-                        Yes
-                    </label>
+        <div v-if="currentUser.role === 'ADMIN' && survey.status === 'UNLOCKED' && !survey.is_deleted">
+            <form @submit.prevent="submit" class="row mb-0">
+                <div class="form-group col-md-6 col-sm-12 border-right">
+                    <label class="q-label required">Description</label>
+                    <textarea class="form-control" name="description" placeholder="Enter question name" required v-model="question.description"></textarea>
                 </div>
-                <div class="form-check">
-                    <input :value="false" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
-                    <label class="form-check-label">
-                        No
-                    </label>
-                </div>
-            </div>
 
-            <div class="form-group col-md-3 col-sm-12 border-right">
-                <label class="q-label required">Type</label>
-                <div class="form-check">
-                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="TEXT">
-                    <label class="form-check-label">
-                        Text
-                    </label>
+                <div class="form-group col-md-6 col-sm-12 border-right">
+                    <label class="q-label">Note</label>
+                    <textarea class="form-control" name="note" placeholder="Enter question note" v-model="question.note"></textarea>
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="RADIO">
-                    <label class="form-check-label">
-                        Radio
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="CHECKBOX">
-                    <label class="form-check-label">
-                        Checkbox
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="NONE">
-                    <label class="form-check-label">
-                        None
-                    </label>
-                </div>
-            </div>
 
-            <div class="form-group col-md-3 col-sm-12 border-right">
-                <label class="q-label required">Attachments?</label>
-                <div class="form-check">
-                    <input :value="true" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
-                    <label class="form-check-label">
-                        Yes
-                    </label>
+                <div class="form-group col-md-3 col-sm-12 border-right">
+                    <label class="q-label required">Mandatory?</label>
+                    <div class="form-check">
+                        <input :value="true" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                        <label class="form-check-label">
+                            Yes
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input :value="false" class="form-check-input" name="mandatory" required type="radio" v-model="question.mandatory">
+                        <label class="form-check-label">
+                            No
+                        </label>
+                    </div>
                 </div>
-                <div class="form-check">
-                    <input :value="false" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
-                    <label class="form-check-label">
-                        No
-                    </label>
-                </div>
-            </div>
 
-            <div class="form-group col-md-3 col-sm-12 border-right">
-                <label class="q-label required">Index</label>
-                <input class="form-control" name="attachments" required type="number" v-model="question.index">
-            </div>
-
-            <div class="form-group col-12">
-                <button class="btn btn-sm border btn-primary float-right" title="Submit" type="submit">
-                    Submit
-                </button>
-                <button @click="reset" class="btn btn-sm border btn-secondary float-right mr-2" title="Reset" type="button">
-                    Reset
-                </button>
-            </div>
-        </form>
-        <hr class="mt-0 mb-3">
-        <template v-if="['RADIO','CHECKBOX'].includes(question.type)">
-            <div class="form-group">
-                <div class="float-left" role="group">
-                    <h6>Options</h6>
+                <div class="form-group col-md-3 col-sm-12 border-right">
+                    <label class="q-label required">Type</label>
+                    <div class="form-check">
+                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="TEXT">
+                        <label class="form-check-label">
+                            Text
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="RADIO">
+                        <label class="form-check-label">
+                            Radio
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="CHECKBOX">
+                        <label class="form-check-label">
+                            Checkbox
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" name="type" required type="radio" v-model="question.type" value="NONE">
+                        <label class="form-check-label">
+                            None
+                        </label>
+                    </div>
                 </div>
-                <div class="btn-group float-right" role="group">
-                    <button class="btn btn-sm border btn-success" data-target="#systemO" data-toggle="modal" title="Add System Option" type="button" v-if="!survey.is_deleted">
-                        <font-awesome-icon icon="server"/>
+
+                <div class="form-group col-md-3 col-sm-12 border-right">
+                    <label class="q-label required">Attachments?</label>
+                    <div class="form-check">
+                        <input :value="true" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                        <label class="form-check-label">
+                            Yes
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input :value="false" class="form-check-input" name="attachments" required type="radio" v-model="question.attachments">
+                        <label class="form-check-label">
+                            No
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group col-md-3 col-sm-12 border-right">
+                    <label class="q-label required">Index</label>
+                    <input class="form-control" name="attachments" required type="number" v-model="question.index">
+                </div>
+
+                <div class="form-group col-12">
+                    <button class="btn btn-sm border btn-primary float-right" title="Submit" type="submit">
+                        Submit
                     </button>
-                    <button class="btn btn-sm border btn-success" data-target="#customO" data-toggle="modal" title="Add Custom Option" type="button" v-if="!survey.is_deleted">
-                        <font-awesome-icon icon="chalkboard-teacher"/>
+                    <button @click="reset" class="btn btn-sm border btn-secondary float-right mr-2" title="Reset" type="button">
+                        Reset
                     </button>
                 </div>
-            </div>
-
-            <div class="table table-responsive mb-5">
-                <table class="table border-top mt-1">
-                    <thead>
-                    <tr>
-                        <th class="border-top-0">Order</th>
-                        <th class="border-top-0">Description</th>
-                        <th class="border-top-0">Value</th>
-                        <th class="border-top-0 text-center">Type</th>
-                        <th class="border-top-0 text-center" v-if="currentUser.role === 'ADMIN'">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="(option,index) in question.options">
-                        <td class="wd-75">
-                            {{option.index}}
-                            <a @click="move(option.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="option.index !== 1">
-                                <font-awesome-icon icon="arrow-up"/>
-                            </a>
-                            <a @click="move(option.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="option.index!== question.options.length">
-                                <font-awesome-icon icon="arrow-down"/>
-                            </a>
-                        </td>
-                        <td>{{option.description}}</td>
-                        <td>{{option.value}}</td>
-                        <td class="text-center">
-                            <font-awesome-icon class="text-primary" icon="server" title="System Option" v-if="option.type === 'SYSTEM'"/>
-                            <font-awesome-icon class="text-primary" icon="chalkboard-teacher" title="Custom Option" v-if="option.type === 'CUSTOM'"/>
-                        </td>
-                        <td class="text-center">
-                            <a class="mr-2" href="javascript:void(0)" title="Edit Question" v-if="option.type === 'CUSTOM'">
-                                <font-awesome-icon icon="edit"/>
-                            </a>
-                            <a @click="confirmDeleteOption(option.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
-                                <font-awesome-icon class="text-danger" icon="trash"/>
-                            </a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </template>
-        <div aria-hidden="true" aria-labelledby="systemOLabel" class="modal fade" id="systemO" role="dialog" tabindex="-1">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header p-2">
-                        <h6 class="modal-title ml-2" id="systemOLabel">Select a system question</h6>
-                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
-                            <span aria-hidden="true">&times;</span>
+            </form>
+            <hr class="mt-0 mb-3">
+            <template v-if="['RADIO','CHECKBOX'].includes(question.type)">
+                <div class="form-group mb-1">
+                    <div class="float-left align-bottom">
+                        <h5 class="card-subtitle font-weight-normal mt-auto">Options</h5>
+                    </div>
+                    <div class="btn-group float-right" role="group">
+                        <button class="btn btn-sm border btn-success" data-target="#systemO" data-toggle="modal" title="Add System Option" type="button" v-if="!survey.is_deleted">
+                            <font-awesome-icon icon="server"/>
+                        </button>
+                        <button class="btn btn-sm border btn-success" data-target="#customO" data-toggle="modal" title="Add Custom Option" type="button" v-if="!survey.is_deleted">
+                            <font-awesome-icon icon="chalkboard-teacher"/>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <v-select :filterable="false" :options="systemOptions" @search="onSystemSearch" label="id" placeholder="Search system options" v-model="optionid">
-                            <template slot="no-options">
-                                type to search system options
-                            </template>
-                            <template slot="option" slot-scope="option">
-                                <div class="d-center">
-                                    Description : {{ option.description }}<br>
-                                    Value: {{ option.value }}
-                                </div>
-                            </template>
-                            <template slot="selected-option" slot-scope="option">
-                                <div class="selected d-center">
-                                    {{ option.description }}
-                                </div>
-                            </template>
-                        </v-select>
-                    </div>
-                    <div class="modal-footer p-1">
-                        <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
-                        <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+                </div>
+
+                <div class="table table-responsive mb-5">
+                    <table class="table border-top mt-1">
+                        <thead>
+                        <tr>
+                            <th class="border-top-0">Order</th>
+                            <th class="border-top-0">Description</th>
+                            <th class="border-top-0">Value</th>
+                            <th class="border-top-0 text-center">Type</th>
+                            <th class="border-top-0 text-center" v-if="currentUser.role === 'ADMIN'">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(option,index) in question.options">
+                            <td class="wd-75">
+                                {{option.index}}
+                                <a @click="move(option.id, 'UP')" class="ml-2" href="javascript:void(0)" title="Move Up" v-if="option.index !== 1">
+                                    <font-awesome-icon icon="arrow-up"/>
+                                </a>
+                                <a @click="move(option.id, 'DOWN')" class="ml-2" href="javascript:void(0)" title="Move Down" v-if="option.index!== question.options.length">
+                                    <font-awesome-icon icon="arrow-down"/>
+                                </a>
+                            </td>
+                            <td>{{option.description}}</td>
+                            <td>{{option.value}}</td>
+                            <td class="text-center">
+                                <font-awesome-icon class="text-primary" icon="server" title="System Option" v-if="option.type === 'SYSTEM'"/>
+                                <font-awesome-icon class="text-primary" icon="chalkboard-teacher" title="Custom Option" v-if="option.type === 'CUSTOM'"/>
+                            </td>
+                            <td class="text-center">
+                                <a class="mr-2" href="javascript:void(0)" title="Edit Question" v-if="option.type === 'CUSTOM'">
+                                    <font-awesome-icon icon="edit"/>
+                                </a>
+                                <a @click="confirmDeleteOption(option.id)" href="javascript:void(0)" title="Delete Question" v-if="survey.status === 'UNLOCKED'">
+                                    <font-awesome-icon class="text-danger" icon="trash"/>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <div aria-hidden="true" aria-labelledby="systemOLabel" class="modal fade" id="systemO" role="dialog" tabindex="-1">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header p-2">
+                            <h6 class="modal-title ml-2" id="systemOLabel">Select a system question</h6>
+                            <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <v-select :filterable="false" :options="systemOptions" @search="onSystemSearch" label="id" placeholder="Search system options" v-model="optionid">
+                                <template slot="no-options">
+                                    type to search system options
+                                </template>
+                                <template slot="option" slot-scope="option">
+                                    <div class="d-center">
+                                        Description : {{ option.description }}<br>
+                                        Value: {{ option.value }}
+                                    </div>
+                                </template>
+                                <template slot="selected-option" slot-scope="option">
+                                    <div class="selected d-center">
+                                        {{ option.description }}
+                                    </div>
+                                </template>
+                            </v-select>
+                        </div>
+                        <div class="modal-footer p-1">
+                            <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
+                            <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div aria-hidden="true" aria-labelledby="customOLabel" class="modal fade" id="customO" role="dialog" tabindex="-1">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header p-2">
-                        <h6 class="modal-title ml-2" id="customOLabel">Select a system question</h6>
-                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <v-select :filterable="false" :options="customOptions" @search="onCustomSearch" class="mb-2" label="id" placeholder="Search custom options" v-model="optionid">
-                            <template slot="no-options">
-                                type to search system options
-                            </template>
-                            <template slot="option" slot-scope="option">
-                                <div class="d-center">
-                                    Description : {{ option.description }}<br>
-                                    Value: {{ option.value }}
-                                </div>
-                            </template>
-                            <template slot="selected-option" slot-scope="option">
-                                <div class="selected d-center">
-                                    {{ option.description }}
-                                </div>
-                            </template>
-                        </v-select>
-                        <div class="separator font-weight-light">Or create a custom option</div>
-                        <label class="q-label required">Value</label>
-                        <textarea class="form-control" placeholder="Enter option value" v-model="option.value"></textarea>
-                        <label class="q-label required mt-2">Description</label>
-                        <textarea class="form-control" placeholder="Enter option description" v-model="option.description"></textarea>
-                    </div>
-                    <div class="modal-footer p-1">
-                        <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
-                        <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+            <div aria-hidden="true" aria-labelledby="customOLabel" class="modal fade" id="customO" role="dialog" tabindex="-1">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header p-2">
+                            <h6 class="modal-title ml-2" id="customOLabel">Select a system question</h6>
+                            <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <v-select :filterable="false" :options="customOptions" @search="onCustomSearch" class="mb-2" label="id" placeholder="Search custom options" v-model="optionid">
+                                <template slot="no-options">
+                                    type to search system options
+                                </template>
+                                <template slot="option" slot-scope="option">
+                                    <div class="d-center">
+                                        Description : {{ option.description }}<br>
+                                        Value: {{ option.value }}
+                                    </div>
+                                </template>
+                                <template slot="selected-option" slot-scope="option">
+                                    <div class="selected d-center">
+                                        {{ option.description }}
+                                    </div>
+                                </template>
+                            </v-select>
+                            <div class="separator font-weight-light">Or create a custom option</div>
+                            <label class="q-label required">Value</label>
+                            <textarea class="form-control" placeholder="Enter option value" v-model="option.value"></textarea>
+                            <label class="q-label required mt-2">Description</label>
+                            <textarea class="form-control" placeholder="Enter option description" v-model="option.description"></textarea>
+                        </div>
+                        <div class="modal-footer p-1">
+                            <button @click="cancel" class="btn btn-sm btn-secondary mt-0 mb-0" data-dismiss="modal" type="button">Cancel</button>
+                            <button @click="saveOption" class="btn btn-sm btn-primary mt-0 mb-0 mr-0" data-dismiss="modal" type="button">Confirm</button>
+                        </div>
                     </div>
                 </div>
             </div>
+            <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteOption" body="This operation is permanent. Are you sure?" title="Delete option"/>
         </div>
-        <confirm :show="confirmShow" @cancel="cancel" @confirm="deleteOption" body="This operation is permanent. Are you sure?" title="Delete option"/>
-    </div>
-    <div v-else>
-        Read Only
+        <div v-else>
+            <div class="row">
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Record Id</dt>
+                    <dd>{{record.id}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Subject Name</dt>
+                    <dd>{{record.subject_name}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12  border-right">
+                    <dt>Subject Description</dt>
+                    <dd>{{record.subject_description}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Created At</dt>
+                    <dd>{{record.created_at | timestamp}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Creator Name</dt>
+                    <dd>{{record.first_name}} {{record.last_name}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Creator EMail</dt>
+                    <dd>{{record.email}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                    <dt>Locked At</dt>
+                    <dd>{{record.locked_at | timestamp}}</dd>
+                </dl>
+                <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right" v-if="survey.is_deleted">
+                    <dt>Deleted</dt>
+                    <dd>{{survey.is_deleted?'Yes':'No'}}</dd>
+                </dl>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -398,7 +446,7 @@
                 this.optionid      = null;
                 this.systemOptions = [];
                 this.customOptions = [];
-                this.option        = {
+                this.option = {
                     description: null,
                     value: null
                 },
@@ -410,7 +458,7 @@
                     await this.$http.delete(`/surveys/${this.surveyid}/questions/${this.questionid}/options/${this.optionid}`);
                     await this.getQuestion();
                 } catch(e) {
-                    this.$toastr.e("Internal Server Error","Error");
+                    this.$toastr.e("Internal Server Error", "Error");
                 } finally {
                     this.cancel();
                     EventBus.$emit("closeLoader");

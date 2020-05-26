@@ -68,35 +68,32 @@
         <h5 class="card-subtitle font-weight-normal mb-3">Record Details</h5>
         <div class="row">
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Survey Id</dt>
-                <dd>{{survey.id}}</dd>
+                <dt>Record Id</dt>
+                <dd>{{record.id}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Name</dt>
-                <dd>{{survey.name}}</dd>
+                <dt>Subject Name</dt>
+                <dd>{{record.subject_name}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12  border-right">
-                <dt>Description</dt>
-                <dd>{{survey.description}}</dd>
-            </dl>
-            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Version</dt>
-                <dd>{{survey.version}}</dd>
-            </dl>
-            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Status</dt>
-                <dd>
-                    <font-awesome-icon class="text-secondary ml-2" icon="lock" v-if="survey.status === 'LOCKED'"/>
-                    <font-awesome-icon class="text-primary ml-2" icon="lock-open" v-if="survey.status === 'UNLOCKED'"/>
-                </dd>
+                <dt>Subject Description</dt>
+                <dd>{{record.subject_description}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Created At</dt>
-                <dd>{{survey.created_at | timestamp}}</dd>
+                <dd>{{record.created_at | timestamp}}</dd>
+            </dl>
+            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                <dt>Creator Name</dt>
+                <dd>{{record.first_name}} {{record.last_name}}</dd>
+            </dl>
+            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                <dt>Creator EMail</dt>
+                <dd>{{record.email}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Locked At</dt>
-                <dd>{{survey.locked_at | timestamp}}</dd>
+                <dd>{{record.locked_at | timestamp}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right" v-if="survey.is_deleted">
                 <dt>Deleted</dt>
@@ -114,11 +111,11 @@
                         <small class="form-text text-muted" v-if="question.note">{{question.note}}</small>
                     </div>
                     <template v-if="question.type === 'TEXT'">
-                        <textarea :required="question.mandatory" class="form-control" type="text"/>
+                        <textarea :required="question.mandatory" class="form-control" type="text" v-model="question.text"/>
                     </template>
                     <div v-if="question.type === 'RADIO'">
                         <div class="form-check" v-for="(option,j) in question.options">
-                            <input :name="'question_'+i+'_'+j" :value="option.value" class="form-check-input" type="radio">
+                            <input :name="'question_'+i+'_'+j" :value="option.id" class="form-check-input" type="radio" v-model="question.radio">
                             <label class="form-check-label">
                                 {{option.description}}
                             </label>
@@ -126,7 +123,7 @@
                     </div>
                     <div v-if="question.type === 'CHECKBOX'">
                         <div class="form-check" v-for="(option,j) in question.options">
-                            <input :name="'question_'+i+'_'+j" :value="option.value" class="form-check-input" type="checkbox">
+                            <input :value="option.id" class="form-check-input" type="checkbox" v-model="question.checkbox">
                             <label class="form-check-label">
                                 {{option.description}}
                             </label>
@@ -137,10 +134,10 @@
                         <label class="custom-file-label">Choose file...</label>
                     </div>
                     <div class="w-100">
-                        <button @click="save(question.id)" class="btn btn-sm btn-primary mt-1 float-right" title="Reset" type="button">
+                        <button @click="save(question)" class="btn btn-sm btn-primary mt-1 float-right" title="Save" type="button">
                             <font-awesome-icon icon="save"/>
                         </button>
-                        <button @click="save(question.id)" class="btn btn-sm btn-secondary mt-1 float-right mr-2" title="Save">
+                        <button @click="reset(question)" class="btn btn-sm btn-secondary mt-1 float-right mr-2" title="Reset">
                             <font-awesome-icon icon="undo-alt"/>
                         </button>
                         <div class="clearfix"></div>
@@ -197,8 +194,8 @@
         methods: {
             async init() {
                 await this.getSurvey();
-                await this.getQuestions();
                 await this.getRecord();
+                await this.getAnswers();
             },
             async getSurvey() {
                 try {
@@ -216,10 +213,23 @@
                     EventBus.$emit('closeLoader');
                 }
             },
-            async getQuestions() {
+            async getRecord() {
                 try {
-                    EventBus.$emit('openLoader', 'Fetching questions');
-                    const reply = await this.$http.get(`surveys/${this.surveyid}/questions`);
+                    EventBus.$emit('openLoader', 'Fetching record');
+                    let reply = await this.$http.get(`/surveys/${this.surveyid}/records/${this.recordid}`);
+                    if(reply) {
+                        this.record = reply.data
+                    }
+                } catch(e) {
+                    this.$toastr.e("Internal server error", "Error");
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            async getAnswers() {
+                try {
+                    EventBus.$emit('openLoader', 'Fetching answers');
+                    const reply = await this.$http.get(`surveys/${this.surveyid}/records/${this.recordid}/answers`);
                     if(reply.data) {
                         this.questions = reply.data;
                     }
@@ -229,20 +239,27 @@
                     EventBus.$emit('closeLoader');
                 }
             },
-            async getRecord() {
+            async save(question) {
+                console.log(question.id, question.answer_id, question.text, question.radio, JSON.stringify(question.checkbox));
                 try {
-                    EventBus.$emit('openLoader', 'Fetching record');
-                    let reply = await this.$http.get(`/surveys/${this.surveyid}/records/${this.recordid}`);
-                    if(reply) {
-                        this.records = reply.data
+                    EventBus.$emit('openLoader', 'Saving answer');
+                    let payload = {
+                        id: question.answer_id,
+                        question_id: question.id,
+                        text: question.text,
+                        radio: question.radio,
+                        checkbox: question.checkbox
                     }
+
+                    await this.$http.post(`surveys/${this.surveyid}/records/${this.recordid}/answers`, payload);
+                    await this.getAnswers();
                 } catch(e) {
                     this.$toastr.e("Internal server error", "Error");
                 } finally {
                     EventBus.$emit('closeLoader');
                 }
             },
-            save() {
+            reset() {
 
             }
         }
