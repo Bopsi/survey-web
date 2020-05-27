@@ -84,6 +84,7 @@
                     <th class="border-top-0">Surveyor Name</th>
                     <th class="border-top-0">Surveyor Email</th>
                     <th class="border-top-0">Created At</th>
+                    <th class="border-top-0">Submitted At</th>
                     <th class="border-top-0 text-center">Action</th>
                 </tr>
                 </thead>
@@ -94,6 +95,7 @@
                     <td>{{record.first_name+' '+record.last_name}}</td>
                     <td>{{record.email}}</td>
                     <td>{{record.created_at | date}}</td>
+                    <td>{{record.locked_at | date}}</td>
                     <td class="text-center">
                         <router-link :to="{name: 'survey-record' , params : { surveyid: id, recordid: record.id}}" class="mr-2" title="View Record">
                             <font-awesome-icon icon="eye"/>

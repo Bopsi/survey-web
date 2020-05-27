@@ -80,6 +80,13 @@
                 <dd>{{record.subject_description}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
+                <dt>Status</dt>
+                <dd>
+                    <font-awesome-icon class="text-secondary ml-2" icon="lock" v-if="record.locked_at"/>
+                    <font-awesome-icon class="text-primary ml-2" icon="lock-open" v-else/>
+                </dd>
+            </dl>
+            <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
                 <dt>Created At</dt>
                 <dd>{{record.created_at | timestamp}}</dd>
             </dl>
@@ -88,11 +95,11 @@
                 <dd>{{record.first_name}} {{record.last_name}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Creator EMail</dt>
+                <dt>Creator Email</dt>
                 <dd>{{record.email}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right">
-                <dt>Locked At</dt>
+                <dt>Submitted At</dt>
                 <dd>{{record.locked_at | timestamp}}</dd>
             </dl>
             <dl class="col-lg-3 col-md-3 col-sm-6 col-xs-12 border-right" v-if="survey.is_deleted">
@@ -104,18 +111,18 @@
 
         <div class="mt-2 mb-5">
             <h5 class="card-subtitle font-weight-normal mb-3">Answers</h5>
-            <form>
-                <div class="form-group col-md-6 col-sm-12 mb-0" v-for="(question,i) in questions">
+            <form @submit.prevent="submit">
+                <div :class="{ 'modified' : null}" class="form-group col-md-6 col-sm-12 mb-0" v-for="(question,i) in questions">
                     <div class="mb-2">
                         <label :class="question.mandatory?'required':''" class="font-weight-bold mb-0 q-label"> {{i+1}}. {{question.description}}</label>
                         <small class="form-text text-muted" v-if="question.note">{{question.note}}</small>
                     </div>
                     <template v-if="question.type === 'TEXT'">
-                        <textarea :required="question.mandatory" class="form-control" type="text" v-model="question.text"/>
+                        <textarea :required="question.mandatory" class="form-control" type="text" v-model="question.text" :readonly="record.locked_at"/>
                     </template>
                     <div v-if="question.type === 'RADIO'">
                         <div class="form-check" v-for="(option,j) in question.options">
-                            <input :name="'question_'+i+'_'+j" :value="option.id" class="form-check-input" type="radio" v-model="question.radio">
+                            <input :name="'question_'+i" :value="option.id" class="form-check-input" type="radio" v-model="question.radio" :required="question.mandatory" :readonly="record.locked_at">
                             <label class="form-check-label">
                                 {{option.description}}
                             </label>
@@ -123,7 +130,7 @@
                     </div>
                     <div v-if="question.type === 'CHECKBOX'">
                         <div class="form-check" v-for="(option,j) in question.options">
-                            <input :value="option.id" class="form-check-input" type="checkbox" v-model="question.checkbox">
+                            <input :value="option.id" class="form-check-input" type="checkbox" v-model="question.checkbox" :readonly="record.locked_at">
                             <label class="form-check-label">
                                 {{option.description}}
                             </label>
@@ -133,25 +140,25 @@
                         <input class="custom-file-input" required type="file">
                         <label class="custom-file-label">Choose file...</label>
                     </div>
-                    <div class="w-100">
+                    <div class="w-100" v-if="!record.locked_at">
                         <button @click="save(question)" class="btn btn-sm btn-primary mt-1 float-right" title="Save" type="button">
                             <font-awesome-icon icon="save"/>
                         </button>
-                        <button @click="reset(question)" class="btn btn-sm btn-secondary mt-1 float-right mr-2" title="Reset">
+                        <button @click="reset(i)" class="btn btn-sm btn-secondary mt-1 float-right mr-2" title="Reset" type="button">
                             <font-awesome-icon icon="undo-alt"/>
                         </button>
                         <div class="clearfix"></div>
                     </div>
                     <hr class="mt-1 mb-1">
                 </div>
-                <div class="form-group col-md-6 col-sm-12 mb-5">
-                    <button class="btn btn-sm btn-primary float-right" title="Save All and Submit">
+                <div class="form-group col-md-6 col-sm-12 mb-5"  v-if="!record.locked_at">
+                    <button class="btn btn-sm btn-primary float-right" title="Save All and Submit" type="submit">
                         <font-awesome-icon class="mr-2" icon="save"/>
-                        Save All and Submit
+                        Submit
                     </button>
-                    <button class="btn btn-sm btn-secondary float-right mr-2" title="Reset All">
+                    <button @click="resetAll" class="btn btn-sm btn-secondary float-right mr-2" title="Reset All" type="button">
                         <font-awesome-icon class="mr-2" icon="undo-alt"/>
-                        Reset All
+                        Reset
                     </button>
                     <div class="clearfix"></div>
                 </div>
@@ -163,6 +170,7 @@
 <script>
     import {mapGetters} from "vuex";
     import EventBus from "../../../event-bus";
+    import _ from 'lodash';
 
     export default {
         name: "SurveyRecords",
@@ -182,6 +190,7 @@
                     locked_at: null,
                     created_by: 1,
                 },
+                backup: [],
                 questions: [],
                 record: {
                     id: null
@@ -231,6 +240,7 @@
                     EventBus.$emit('openLoader', 'Fetching answers');
                     const reply = await this.$http.get(`surveys/${this.surveyid}/records/${this.recordid}/answers`);
                     if(reply.data) {
+                        this.backup    = JSON.parse(JSON.stringify(reply.data));
                         this.questions = reply.data;
                     }
                 } catch(e) {
@@ -240,7 +250,6 @@
                 }
             },
             async save(question) {
-                console.log(question.id, question.answer_id, question.text, question.radio, JSON.stringify(question.checkbox));
                 try {
                     EventBus.$emit('openLoader', 'Saving answer');
                     let payload = {
@@ -251,7 +260,7 @@
                         checkbox: question.checkbox
                     }
 
-                    await this.$http.post(`surveys/${this.surveyid}/records/${this.recordid}/answers`, payload);
+                    await this.$http.put(`surveys/${this.surveyid}/records/${this.recordid}/answers`, payload);
                     await this.getAnswers();
                 } catch(e) {
                     this.$toastr.e("Internal server error", "Error");
@@ -259,13 +268,47 @@
                     EventBus.$emit('closeLoader');
                 }
             },
-            reset() {
+            reset(index) {
+                this.questions[index].text     = this.backup[index].text;
+                this.questions[index].radio    = this.backup[index].radio;
+                this.questions[index].checkbox = JSON.parse(JSON.stringify(this.backup[index].checkbox));
+            },
+            async submit() {
+                try {
+                    EventBus.$emit('openLoader', 'Submitting record');
+                    let calls = [];
+                    this.questions.forEach((q, i, a) => {
+                        if(q.text !== this.backup[i].text || q.radio !== this.backup[i].radio || !_.isEqual(_.sortBy(q.checkbox), _.sortBy(this.backup[i].checkbox))) {
+                            let payload = {
+                                id: q.answer_id,
+                                question_id: q.id,
+                                text: q.text,
+                                radio: q.radio,
+                                checkbox: q.checkbox
+                            }
 
+                            calls.push(this.$http.put(`surveys/${this.surveyid}/records/${this.recordid}/answers`, payload));
+                        }
+                    });
+
+                    await Promise.all(calls);
+                    await this.$http.post(`surveys/${this.surveyid}/records/${this.recordid}/answers`);
+                    await this.init();
+                } catch(e) {
+                    this.$toastr.e("Internal server error", "Error");
+                } finally {
+                    EventBus.$emit('closeLoader');
+                }
+            },
+            resetAll() {
+                this.questions = [...this.backup];
             }
         }
     }
 </script>
 
 <style scoped>
-
+    input[type="checkbox"][readonly] {
+        pointer-events: none;
+    }
 </style>
